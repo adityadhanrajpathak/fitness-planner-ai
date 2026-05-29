@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered personalized workout routines and meal plans tailored to your goals, cultural preferences, and budget.">
+  <title>FitPlanner AI — Personalized Workout & Diet Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ─── Loading Screen ─── -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-logo">
+        <span class="loading-icon">🏋️</span>
+        <h1>FitPlanner AI</h1>
+      </div>
+      <div class="loading-bar">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <p class="loading-text">Preparing your fitness journey...</p>
+    </div>
+  </div>
+
+  <!-- ─── Toast Container ─── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ─── App Shell ─── -->
+  <div id="app" class="app" style="display:none;">
+    
+    <!-- ─── Sidebar Navigation ─── -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="logo-icon">🏋️</span>
+          <span class="logo-text">FitPlanner<span class="logo-ai">AI</span></span>
+        </div>
+        <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">User</span>
+          <span class="user-email" id="user-email">user@email.com</span>
+        </div>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="#dashboard" class="nav-link active" data-page="dashboard">
+          <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
+        </a></li>
+        <li><a href="#workout" class="nav-link" data-page="workout">
+          <span class="nav-icon">💪</span><span class="nav-text">Workout Plan</span>
+        </a></li>
+        <li><a href="#diet" class="nav-link" data-page="diet">
+          <span class="nav-icon">🥗</span><span class="nav-text">Diet Plan</span>
+        </a></li>
+        <li><a href="#profile" class="nav-link" data-page="profile">
+          <span class="nav-icon">👤</span><span class="nav-text">My Profile</span>
+        </a></li>
+        <li><a href="#progress" class="nav-link" data-page="progress">
+          <span class="nav-icon">📈</span><span class="nav-text">Progress</span>
+        </a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button id="btn-logout" class="btn-logout">
+          <span class="nav-icon">🚪</span><span class="nav-text">Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ─── Mobile Header ─── -->
+    <header class="mobile-header" id="mobile-header">
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="mobile-title">🏋️ FitPlanner AI</span>
+      <div class="mobile-avatar" id="mobile-avatar">A</div>
+    </header>
+
+    <!-- ─── Overlay for mobile sidebar ─── -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- ─── Main Content ─── -->
+    <main id="main-content" class="main-content">
+      <div id="page-container" class="page-container">
+        <!-- Pages rendered here by JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Auth Pages (shown when not logged in) ─── -->
+  <div id="auth-container" class="auth-container" style="display:none;">
+    <div class="auth-bg">
+      <div class="auth-orb auth-orb-1"></div>
+      <div class="auth-orb auth-orb-2"></div>
+      <div class="auth-orb auth-orb-3"></div>
+    </div>
+    <div class="auth-card" id="auth-card">
+      <!-- Auth form rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ─── Scripts ─── -->
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/workout.js"></script>
+  <script src="js/diet.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
