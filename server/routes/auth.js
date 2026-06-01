@@ -28,13 +28,15 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
     const result = createUser.run(email.toLowerCase().trim(), passwordHash, name.trim());
 
-    const token = jwt.sign({ userId: result.lastInsertRowid }, config.JWT_SECRET, {
+    const userId = Number(result.lastInsertRowid);
+
+    const token = jwt.sign({ userId }, config.JWT_SECRET, {
       expiresIn: config.JWT_EXPIRES_IN
     });
 
     res.status(201).json({
       token,
-      user: { id: result.lastInsertRowid, email, name }
+      user: { id: userId, email, name }
     });
   } catch (err) {
     console.error('Register error:', err);

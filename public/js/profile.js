@@ -403,25 +403,40 @@ const Profile = {
           // 1. Save Profile to server
           await API.updateProfile(this.formData);
 
-          // 2. Generate Workout and Diet Plans
-          App.showToast('Profile updated! Generating AI workout...', 'info');
-          await API.generateWorkout();
+          // 2. Generate Workout Plan
+          try {
+            App.showToast('Profile updated! Generating AI workout...', 'info');
+            await API.generateWorkout();
+          } catch (workoutErr) {
+            console.error('Workout generation failed:', workoutErr);
+            App.showToast('Workout plan generation failed, but profile was saved.', 'warning');
+          }
 
-          App.showToast('Workout plan ready! Creating AI diet plan...', 'info');
-          await API.generateDiet();
+          // 3. Generate Diet Plan
+          try {
+            App.showToast('Creating AI diet plan...', 'info');
+            await API.generateDiet();
+          } catch (dietErr) {
+            console.error('Diet generation failed:', dietErr);
+            App.showToast('Diet plan generation failed, but profile was saved.', 'warning');
+          }
 
           App.showToast('All setup complete! Welcome aboard.', 'success');
 
           // Refresh user cache
-          const me = await API.getMe();
-          if (me && me.user) {
-            API.setUser(me.user);
+          try {
+            const me = await API.getMe();
+            if (me && me.user) {
+              API.setUser(me.user);
+            }
+          } catch (meErr) {
+            console.error('Failed to refresh user cache:', meErr);
           }
 
-          // 3. Go to Dashboard
+          // 4. Go to Dashboard
           window.location.hash = '#dashboard';
         } catch (err) {
-          App.showToast(err.message, 'error');
+          App.showToast(err.message || 'Failed to save profile. Please try again.', 'error');
           submitBtn.disabled = false;
           submitBtn.classList.remove('btn-loading');
         }

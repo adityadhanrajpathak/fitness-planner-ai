@@ -70,7 +70,7 @@ router.post('/progress', (req, res) => {
     res.status(201).json({ message: 'Progress logged successfully.' });
   } catch (err) {
     console.error('Progress log error:', err);
-    res.status(500).json({ error: 'Failed to log progress.' });
+    res.status(500).json({ error: 'Failed to log progress: ' + err.message });
   }
 });
 

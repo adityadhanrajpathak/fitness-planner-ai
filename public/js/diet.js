@@ -42,6 +42,7 @@ const Diet = {
       }
 
       const plan = data.plan;
+      const todayPlan = plan.weekPlan[0];
 
       container.innerHTML = `
         <!-- Header -->
@@ -49,8 +50,8 @@ const Diet = {
           <div>
             <h1 class="text-green">🥗 Custom Diet & Meal Plan</h1>
             <div class="plan-meta mt-1">
-              <span class="meta-tag">🍽️ Meals: ${plan.meals.length} / Day</span>
-              <span class="meta-tag">⚡ Calories: ${plan.daily_totals.calories} kcal</span>
+              <span class="meta-tag">🍽️ Meals: ${todayPlan.meals.length} / Day</span>
+              <span class="meta-tag">⚡ Calories: ${todayPlan.totals.calories} kcal</span>
             </div>
           </div>
           <div class="quick-actions">
@@ -61,38 +62,27 @@ const Diet = {
 
         <!-- Meals list -->
         <div class="meal-timeline mt-3">
-          ${plan.meals.map(meal => {
-            const icon = this.getMealIcon(meal.meal_type);
-            const budgetStr = meal.budget_tag === 'low' ? 'Tight Budget' : 'Moderate';
+          ${todayPlan.meals.map(item => {
+            const icon = this.getMealIcon(item.type);
+            const budgetStr = item.food.cost === 'low' ? 'Tight Budget' : 'Moderate';
             return `
               <div class="meal-card">
                 <div class="meal-time-badge">
                   <span class="meal-type-icon">${icon}</span>
-                  <span class="meal-time">${meal.meal_type}</span>
+                  <span class="meal-time">${item.label} (${item.time})</span>
                 </div>
                 <div class="meal-details">
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-                    <span class="meal-name">${meal.name}</span>
+                    <span class="meal-name">${item.food.name}</span>
                     <span class="shopping-freq" style="background:rgba(251,146,60,0.15); color:#fb923c;">💰 ${budgetStr}</span>
                   </div>
-                  <div class="meal-description">${meal.description || 'Nutrient-rich energetic meal.'}</div>
+                  <div class="meal-description">${item.food.description || 'Nutrient-rich energetic meal.'}</div>
                   
-                  <div style="margin: 0.5rem 0;">
-                    <strong style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase;">Ingredients:</strong>
-                    <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.25rem;">
-                      ${meal.ingredients.map(ing => `
-                        <span class="meta-tag" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;">
-                          ${ing.name} (${ing.amount})
-                        </span>
-                      `).join('')}
-                    </div>
-                  </div>
-
                   <div class="meal-macros mt-2">
-                    <span class="macro-badge cal">🔥 ${meal.calories} kcal</span>
-                    <span class="macro-badge protein">🥩 P: ${meal.protein}g</span>
-                    <span class="macro-badge carbs">🌾 C: ${meal.carbs}g</span>
-                    <span class="macro-badge fat">🥑 F: ${meal.fat}g</span>
+                    <span class="macro-badge cal">🔥 ${item.food.calories} kcal</span>
+                    <span class="macro-badge protein">🥩 P: ${item.food.protein}g</span>
+                    <span class="macro-badge carbs">🌾 C: ${item.food.carbs}g</span>
+                    <span class="macro-badge fat">🥑 F: ${item.food.fat}g</span>
                   </div>
                 </div>
               </div>
@@ -105,22 +95,22 @@ const Diet = {
           <h3 style="font-size:0.95rem; font-weight:600; margin-bottom:1rem; text-transform:uppercase;">Daily Totals Breakdown</h3>
           <div class="daily-totals-grid">
             <div class="total-item">
-              <span class="total-value">${plan.daily_totals.calories}</span>
+              <span class="total-value">${todayPlan.totals.calories}</span>
               <span class="total-label">Calories (kcal)</span>
               <div class="total-bar"><div class="total-bar-fill" style="width: 100%; background: var(--accent-yellow);"></div></div>
             </div>
             <div class="total-item">
-              <span class="total-value">${plan.daily_totals.protein}g</span>
+              <span class="total-value">${todayPlan.totals.protein}g</span>
               <span class="total-label">Protein</span>
               <div class="total-bar"><div class="total-bar-fill" style="width: 80%; background: var(--accent-red);"></div></div>
             </div>
             <div class="total-item">
-              <span class="total-value">${plan.daily_totals.carbs}g</span>
+              <span class="total-value">${todayPlan.totals.carbs}g</span>
               <span class="total-label">Carbohydrates</span>
               <div class="total-bar"><div class="total-bar-fill" style="width: 65%; background: var(--accent-cyan);"></div></div>
             </div>
             <div class="total-item">
-              <span class="total-value">${plan.daily_totals.fat}g</span>
+              <span class="total-value">${todayPlan.totals.fat}g</span>
               <span class="total-label">Fats</span>
               <div class="total-bar"><div class="total-bar-fill" style="width: 50%; background: var(--accent-orange);"></div></div>
             </div>
@@ -160,37 +150,19 @@ const Diet = {
   },
 
   generateShoppingItems(plan) {
-    const uniqueIngredients = {};
-    plan.meals.forEach(meal => {
-      meal.ingredients.forEach(ing => {
-        const name = ing.name.trim();
-        if (uniqueIngredients[name]) {
-          uniqueIngredients[name].amounts.push(ing.amount);
-        } else {
-          uniqueIngredients[name] = {
-            name,
-            amounts: [ing.amount],
-            frequency: ing.frequency || 'weekly'
-          };
-        }
-      });
-    });
-
-    return Object.values(uniqueIngredients).map(ing => {
-      const consolidatedAmount = ing.amounts.join(' / ');
-      return `
+    if (!plan.shoppingList) return '';
+    return plan.shoppingList.map(ing => `
         <div class="shopping-item">
           <div class="shopping-item-name">
             <input type="checkbox" style="accent-color:var(--accent-cyan);">
-            <span>${ing.name}</span>
+            <span>${ing.item}</span>
           </div>
           <div style="display:flex; align-items:center; gap:0.5rem;">
-            <span class="text-cyan" style="font-weight:600; font-size:0.85rem;">${consolidatedAmount}</span>
-            <span class="shopping-freq">${ing.frequency}</span>
+            <span class="text-cyan" style="font-weight:600; font-size:0.85rem;">x${ing.frequency}</span>
+            <span class="shopping-freq">${ing.note}</span>
           </div>
         </div>
-      `;
-    }).join('');
+      `).join('');
   },
 
   attachEventListeners(plan) {
@@ -209,20 +181,8 @@ const Diet = {
     const printBtn = document.getElementById('btn-print-shopping');
     if (printBtn) {
       printBtn.onclick = () => {
-        const uniqueIngredients = {};
-        plan.meals.forEach(meal => {
-          meal.ingredients.forEach(ing => {
-            const name = ing.name.trim();
-            if (uniqueIngredients[name]) {
-              uniqueIngredients[name].amounts.push(ing.amount);
-            } else {
-              uniqueIngredients[name] = { name, amounts: [ing.amount] };
-            }
-          });
-        });
-
-        const text = Object.values(uniqueIngredients)
-          .map(ing => `- [ ] ${ing.name} (${ing.amounts.join(' / ')})`)
+        const text = plan.shoppingList
+          .map(ing => `- [ ] ${ing.item} (x${ing.frequency})`)
           .join('\n');
         
         navigator.clipboard.writeText(text);

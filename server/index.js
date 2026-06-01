@@ -34,7 +34,7 @@ app.listen(config.PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════╗
   ║                                                   ║
-  ║   🏋️  FitPlanner AI Server Running                ║
+  ║   🏋️  Fitness Planner Server Running              ║
   ║                                                   ║
   ║   → Local:  http://localhost:${config.PORT}              ║
   ║   → API:    http://localhost:${config.PORT}/api           ║

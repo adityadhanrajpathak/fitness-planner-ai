@@ -57,7 +57,7 @@ const Auth = {
       container.innerHTML = `
         <div class="auth-header">
           <span class="auth-icon">✨</span>
-          <h2>Join FitPlanner</h2>
+          <h2>Join Fitness Planner</h2>
           <p>Get your AI personalized diet & workout plans</p>
         </div>
         <form id="register-form">

@@ -55,11 +55,11 @@ const Workout = {
 
       // Default active day to today, or first day in schedule
       if (!this.activeDay) {
-        const hasToday = plan.schedule.some(s => s.day.toLowerCase() === todayName.toLowerCase());
-        this.activeDay = hasToday ? todayName : plan.schedule[0].day;
+        const hasToday = plan.plan.some(s => s.day.toLowerCase() === todayName.toLowerCase());
+        this.activeDay = hasToday ? todayName : plan.plan[0].day;
       }
 
-      const currentDayPlan = plan.schedule.find(s => s.day.toLowerCase() === this.activeDay.toLowerCase());
+      const currentDayPlan = plan.plan.find(s => s.day.toLowerCase() === this.activeDay.toLowerCase());
 
       container.innerHTML = `
         <!-- Header -->
@@ -67,9 +67,9 @@ const Workout = {
           <div>
             <h1 class="text-cyan">💪 Custom Workout Plan</h1>
             <div class="plan-meta mt-1">
-              <span class="meta-tag">🎯 Goal: ${plan.goal.replace('_', ' ')}</span>
-              <span class="meta-tag">⚡ Level: ${plan.level}</span>
-              <span class="meta-tag">⏱️ Duration: ${plan.duration}m / Session</span>
+              <span class="meta-tag">🎯 Goal: ${plan.metadata.goal.replace('_', ' ')}</span>
+              <span class="meta-tag">⚡ Level: ${plan.metadata.fitnessLevel}</span>
+              <span class="meta-tag">⏱️ Duration: ${plan.metadata.targetDuration}m / Session</span>
             </div>
           </div>
           <button class="btn btn-secondary" id="btn-regenerate-workout">🔄 Regenerate Plan</button>
@@ -77,12 +77,12 @@ const Workout = {
 
         <!-- Day Navigation Tabs -->
         <div class="day-tabs">
-          ${plan.schedule.map(s => {
+          ${plan.plan.map(s => {
             const isActive = s.day.toLowerCase() === this.activeDay.toLowerCase() ? 'active' : '';
-            const isRest = s.rest ? 'rest' : '';
+            const isRest = s.isRest ? 'rest' : '';
             return `
               <div class="day-tab ${isActive} ${isRest}" data-day="${s.day}">
-                ${s.day.slice(0, 3)} ${s.rest ? '💤' : '🏋️'}
+                ${s.day.slice(0, 3)} ${s.isRest ? '💤' : '🏋️'}
               </div>
             `;
           }).join('')}
@@ -114,7 +114,7 @@ const Workout = {
   renderDayPlan(dayPlan) {
     if (!dayPlan) return '<p>No details found for this day.</p>';
 
-    if (dayPlan.rest) {
+    if (dayPlan.isRest) {
       return `
         <div class="rest-day-card">
           <div class="rest-day-icon">💤</div>
@@ -132,21 +132,21 @@ const Workout = {
 
     return `
       <div class="day-summary">
-        <div class="day-summary-item">Routine: <strong>${dayPlan.routine_name}</strong></div>
+        <div class="day-summary-item">Routine: <strong>${dayPlan.focus}</strong></div>
         <div class="day-summary-item">Exercises: <strong>${dayPlan.exercises.length} total</strong></div>
       </div>
 
       <div class="exercise-list">
         ${dayPlan.exercises.map((ex, index) => {
           // Dynamic category badging
-          const cat = (ex.category || 'cardio').toLowerCase();
+          const cat = (ex.muscleGroup || 'cardio').toLowerCase();
           return `
             <div class="exercise-card" id="ex-card-${index}">
               <div class="exercise-num">${index + 1}</div>
               <div class="exercise-info">
                 <div style="display:flex; align-items:center; gap:0.5rem;">
                   <span class="exercise-name">${ex.name}</span>
-                  <span class="muscle-badge ${cat}">${ex.category}</span>
+                  <span class="muscle-badge ${cat}">${ex.muscleGroup || 'Cardio'}</span>
                 </div>
                 <div class="exercise-instructions" title="${ex.instructions}">${ex.instructions}</div>
               </div>
@@ -159,8 +159,8 @@ const Workout = {
                   <span class="exercise-stat-value">${ex.reps}</span>
                   <span class="exercise-stat-label">Reps</span>
                 </div>
-                ${ex.rest_time ? `
-                  <button class="btn btn-icon btn-timer" data-rest="${ex.rest_time}" title="Start Rest Timer">
+                ${ex.rest ? `
+                  <button class="btn btn-icon btn-timer" data-rest="${ex.rest}" title="Start Rest Timer">
                     ⏱️
                   </button>
                 ` : ''}

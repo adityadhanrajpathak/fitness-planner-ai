@@ -35,6 +35,8 @@ const API = {
     return !!this.getToken();
   },
 
+  _handlingAuthError: false,
+
   async request(endpoint, options = {}) {
     const url = `${this.BASE_URL}${endpoint}`;
     const token = this.getToken();
@@ -57,10 +59,13 @@ const API = {
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 && !this._handlingAuthError) {
+          this._handlingAuthError = true;
           this.removeToken();
           this.removeUser();
           window.location.hash = '#login';
+          // Reset the flag after a short delay to allow re-auth
+          setTimeout(() => { this._handlingAuthError = false; }, 2000);
         }
         throw new Error(data.error || 'Something went wrong');
       }

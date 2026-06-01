@@ -52,32 +52,46 @@ const Dashboard = {
         return;
       }
 
-      const analysisData = await API.getAnalysis();
-      const workoutData = await API.getCurrentWorkout();
-      const dietData = await API.getCurrentDiet();
-      const progressData = await API.getProgress();
+      let analysisData = { analysis: null };
+      let workoutData = { plan: null };
+      let dietData = { plan: null };
+      let progressData = { progress: [] };
+
+      try { analysisData = await API.getAnalysis(); } catch (e) { console.warn('Analysis fetch failed:', e); }
+      try { workoutData = await API.getCurrentWorkout(); } catch (e) { console.warn('Workout fetch failed:', e); }
+      try { dietData = await API.getCurrentDiet(); } catch (e) { console.warn('Diet fetch failed:', e); }
+      try { progressData = await API.getProgress(); } catch (e) { console.warn('Progress fetch failed:', e); }
 
       const user = API.getUser();
       const name = user ? user.name : 'Athlete';
       const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
 
       const profile = profileData.profile;
-      const analysis = analysisData.analysis;
+      const analysis = analysisData.analysis || {
+        bmi: '—', bmiCategory: 'N/A', bmr: '—', tdee: '—',
+        caloricTarget: '—', macros: { protein: 0, carbs: 0, fat: 0 }
+      };
 
       // Determine today's workout details
       let todayWorkoutText = 'Rest Day';
-      if (workoutData && workoutData.plan) {
-        const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const dayPlan = workoutData.plan.schedule.find(d => d.day.toLowerCase() === todayName.toLowerCase());
-        if (dayPlan && !dayPlan.rest) {
-          todayWorkoutText = `${dayPlan.routine_name} (${dayPlan.exercises.length} Exercises)`;
+      if (workoutData && workoutData.plan && workoutData.plan.plan) {
+        // Workout days are labeled 'Day 1' through 'Day 7'; map today's weekday to an index
+        const dayOfWeek = new Date().getDay(); // 0=Sunday, 1=Monday...
+        // Map so Monday=0 (Day 1) through Sunday=6 (Day 7)
+        const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const dayPlan = workoutData.plan.plan[dayIndex];
+        if (dayPlan && !dayPlan.isRest) {
+          todayWorkoutText = `${dayPlan.focus} (${dayPlan.exercises.length} Exercises)`;
         }
       }
 
       // Determine today's meal summaries
       let mealSummaryText = 'No active meal plan';
       if (dietData && dietData.plan) {
-        mealSummaryText = `${dietData.plan.daily_totals.calories} kcal • ${profile.meals_per_day} meals generated`;
+        const dailyCal = (dietData.plan.targets && dietData.plan.targets.dailyCalories) ||
+                         (dietData.plan.weeklyAverages && dietData.plan.weeklyAverages.calories) || '—';
+        const mealsCount = (dietData.plan.metadata && dietData.plan.metadata.mealsPerDay) || profile.meals_per_day || 3;
+        mealSummaryText = `${dailyCal} kcal • ${mealsCount} meals generated`;
       }
 
       container.innerHTML = `
@@ -106,15 +120,15 @@ const Dashboard = {
           <div class="stat-card">
             <div class="stat-icon purple">📊</div>
             <div>
-              <div class="stat-value">${analysis.bmi}</div>
-              <div class="stat-label">BMI (${analysis.bmiCategory})</div>
+              <div class="stat-value">${analysis.bmi || '—'}</div>
+              <div class="stat-label">BMI (${analysis.bmiCategory || 'N/A'})</div>
             </div>
           </div>
           <!-- Stat 3: Target Calories -->
           <div class="stat-card">
             <div class="stat-icon green">⚡</div>
             <div>
-              <div class="stat-value">${analysis.targetCalories} kcal</div>
+              <div class="stat-value">${analysis.caloricTarget || analysis.targetCalories || '—'} kcal</div>
               <div class="stat-label">Calorie Goal</div>
             </div>
           </div>
@@ -150,15 +164,15 @@ const Dashboard = {
               <ul class="nav-links" style="padding:0; gap:0.25rem;">
                 <li style="font-size:0.85rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);">
                   <span>Basal Metabolic Rate (BMR):</span> 
-                  <strong class="text-cyan" style="float:right;">${analysis.bmr} kcal</strong>
+                  <strong class="text-cyan" style="float:right;">${analysis.bmr || '—'} kcal</strong>
                 </li>
                 <li style="font-size:0.85rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);">
                   <span>Daily Expenditure (TDEE):</span> 
-                  <strong class="text-purple" style="float:right;">${analysis.tdee} kcal</strong>
+                  <strong class="text-purple" style="float:right;">${analysis.tdee || '—'} kcal</strong>
                 </li>
                 <li style="font-size:0.85rem; padding: 0.5rem 0;">
                   <span>Goal Calorie Budget:</span> 
-                  <strong class="text-green" style="float:right;">${analysis.targetCalories} kcal</strong>
+                  <strong class="text-green" style="float:right;">${analysis.caloricTarget || analysis.targetCalories || '—'} kcal</strong>
                 </li>
               </ul>
             </div>
