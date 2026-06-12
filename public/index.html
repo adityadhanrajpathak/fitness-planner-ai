@@ -67,6 +67,7 @@
         <li><a href="#progress" class="nav-link" data-page="progress">
           <span class="nav-icon">📈</span><span class="nav-text">Progress</span>
         </a></li>
+
       </ul>
 
       <div class="sidebar-footer">
@@ -98,13 +99,86 @@
 
   <!-- ─── Auth Pages (shown when not logged in) ─── -->
   <div id="auth-container" class="auth-container" style="display:none;">
+    <!-- Background grid pattern -->
     <div class="auth-bg">
-      <div class="auth-orb auth-orb-1"></div>
-      <div class="auth-orb auth-orb-2"></div>
-      <div class="auth-orb auth-orb-3"></div>
+      <div class="auth-grid"></div>
     </div>
-    <div class="auth-card" id="auth-card">
-      <!-- Auth form rendered by JS -->
+
+    <!-- Outer glowing frame -->
+    <div class="lamp-login-frame">
+      <!-- Left: Lamp Illustration -->
+      <div class="lamp-scene">
+        <!-- Light beam -->
+        <div class="lamp-light-beam"></div>
+
+        <!-- The Lamp SVG -->
+        <svg class="lamp-svg" viewBox="0 0 260 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Light glow behind shade -->
+          <ellipse cx="130" cy="145" rx="70" ry="30" fill="url(#glowGrad)" opacity="0.5" />
+
+          <!-- Lampshade (wider, rounder bell shape) -->
+          <path d="M60 155 Q60 55 130 40 Q200 55 200 155 Z" fill="url(#shadeGrad)" />
+          <path d="M72 152 Q72 68 130 55 Q188 68 188 152 Z" fill="url(#shadeInner)" />
+
+          <!-- Shade bottom rim -->
+          <ellipse cx="130" cy="155" rx="70" ry="8" fill="#5ba899" opacity="0.6" />
+
+          <!-- Face — Eyes -->
+          <ellipse cx="105" cy="108" rx="10" ry="13" fill="#1a1a3e" />
+          <ellipse cx="155" cy="108" rx="10" ry="13" fill="#1a1a3e" />
+          <!-- Eye highlights -->
+          <ellipse cx="108" cy="105" rx="4" ry="5" fill="white" />
+          <ellipse cx="158" cy="105" rx="4" ry="5" fill="white" />
+          <!-- Small sparkle -->
+          <circle cx="103" cy="102" r="1.5" fill="white" opacity="0.7" />
+          <circle cx="153" cy="102" r="1.5" fill="white" opacity="0.7" />
+
+          <!-- Mouth (open smile) -->
+          <path d="M115 128 Q130 145 145 128" stroke="#1a1a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Tongue -->
+          <ellipse cx="130" cy="137" rx="8" ry="6" fill="#e76e8a" />
+
+          <!-- Blush cheeks -->
+          <ellipse cx="92" cy="122" rx="10" ry="6" fill="rgba(231,110,138,0.3)" />
+          <ellipse cx="168" cy="122" rx="10" ry="6" fill="rgba(231,110,138,0.3)" />
+
+          <!-- Stand / Neck -->
+          <rect x="123" y="155" width="14" height="15" rx="3" fill="#e8dcc8" />
+
+          <!-- Tall pole -->
+          <rect x="126" y="170" width="8" height="140" rx="4" fill="#f0e6d3" />
+
+          <!-- Base plate -->
+          <ellipse cx="130" cy="315" rx="55" ry="12" fill="#e8dcc8" />
+          <rect x="75" y="305" width="110" height="14" rx="6" fill="#f0e6d3" />
+
+          <!-- Cord hanging from shade bottom -->
+          <line class="lamp-cord" x1="160" y1="155" x2="160" y2="230" stroke="#a0a0c0" stroke-width="1.5" stroke-dasharray="3 3" />
+          <!-- Cord pull (small teardrop) -->
+          <circle class="lamp-cord-pull" cx="160" cy="235" r="5" fill="#a0a0c0" />
+
+          <!-- Gradient defs -->
+          <defs>
+            <linearGradient id="shadeGrad" x1="60" y1="40" x2="200" y2="155" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#7ecfc0" />
+              <stop offset="100%" stop-color="#5ba899" />
+            </linearGradient>
+            <linearGradient id="shadeInner" x1="72" y1="55" x2="188" y2="152" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#a5e6d8" />
+              <stop offset="100%" stop-color="#7ecfc0" />
+            </linearGradient>
+            <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(255,240,180,0.4)" />
+              <stop offset="100%" stop-color="rgba(255,240,180,0)" />
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Right: Login Card -->
+      <div class="auth-card" id="auth-card">
+        <!-- Auth form rendered by JS -->
+      </div>
     </div>
   </div>
 
@@ -115,6 +189,7 @@
   <script src="js/dashboard.js"></script>
   <script src="js/workout.js"></script>
   <script src="js/diet.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

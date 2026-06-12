@@ -22,24 +22,26 @@ const Auth = {
     if (this.currentView === 'login') {
       container.innerHTML = `
         <div class="auth-header">
-          <span class="auth-icon">🏋️</span>
           <h2>Welcome Back</h2>
           <p>Login to resume your fitness journey</p>
         </div>
         <form id="login-form">
           <div class="form-group">
-            <label class="form-label" for="login-email">Email Address</label>
-            <input class="form-input" type="email" id="login-email" required placeholder="name@domain.com">
+            <label class="form-label" for="login-email">Username</label>
+            <input class="form-input" type="email" id="login-email" required placeholder="Enter your username">
             <div class="form-error" id="login-email-error">Please enter a valid email.</div>
           </div>
           <div class="form-group">
             <label class="form-label" for="login-password">Password</label>
-            <input class="form-input" type="password" id="login-password" required placeholder="••••••••">
+            <input class="form-input" type="password" id="login-password" required placeholder="Enter your password">
             <div class="form-error" id="login-password-error">Password is required.</div>
           </div>
           <button type="submit" class="btn btn-primary" id="btn-login-submit">
-            <span>Login Now</span>
+            <span>Login</span>
           </button>
+          <div class="form-footer">
+            <a href="#" id="link-forgot-password">Forgot Password?</a>
+          </div>
         </form>
         <div class="auth-switch">
           Don't have an account? <a href="#register" id="link-to-register">Create Account</a>
@@ -52,11 +54,14 @@ const Auth = {
         e.preventDefault();
         window.location.hash = '#register';
       });
+      document.getElementById('link-forgot-password').addEventListener('click', (e) => {
+        e.preventDefault();
+        App.showToast('Password reset coming soon!', 'info');
+      });
 
     } else {
       container.innerHTML = `
         <div class="auth-header">
-          <span class="auth-icon">✨</span>
           <h2>Join Fitness Planner</h2>
           <p>Get your AI personalized diet & workout plans</p>
         </div>

@@ -39,6 +39,7 @@ function calculateCaloricTarget(tdee, goal) {
       return Math.round(tdee - 500);  // ~0.5kg/week loss
     case 'lose_weight_fast':
       return Math.round(tdee - 750);  // ~0.75kg/week loss
+    case 'build_muscle':
     case 'gain_muscle':
       return Math.round(tdee + 300);  // Lean bulk
     case 'gain_weight':
@@ -64,6 +65,7 @@ function calculateMacros(calories, goal, weight) {
       fatRatio = 0.30;
       carbRatio = 0.35;
       break;
+    case 'build_muscle':
     case 'gain_muscle':
       // High protein, high carbs for energy, moderate fat
       proteinRatio = 0.30;

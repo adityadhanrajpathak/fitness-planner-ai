@@ -51,15 +51,19 @@ const Workout = {
       }
 
       const plan = data.plan;
-      const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+      // Map today's weekday to a Day index (Monday=Day 1 ... Sunday=Day 7)
+      const dayOfWeek = new Date().getDay(); // 0=Sunday
+      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday=0
+      const todayDayName = `Day ${dayIndex + 1}`;
 
       // Default active day to today, or first day in schedule
       if (!this.activeDay) {
-        const hasToday = plan.plan.some(s => s.day.toLowerCase() === todayName.toLowerCase());
-        this.activeDay = hasToday ? todayName : plan.plan[0].day;
+        const hasToday = plan.plan.some(s => s.day === todayDayName);
+        this.activeDay = hasToday ? todayDayName : plan.plan[0].day;
       }
 
-      const currentDayPlan = plan.plan.find(s => s.day.toLowerCase() === this.activeDay.toLowerCase());
+      const currentDayPlan = plan.plan.find(s => s.day === this.activeDay);
 
       container.innerHTML = `
         <!-- Header -->
@@ -78,7 +82,7 @@ const Workout = {
         <!-- Day Navigation Tabs -->
         <div class="day-tabs">
           ${plan.plan.map(s => {
-            const isActive = s.day.toLowerCase() === this.activeDay.toLowerCase() ? 'active' : '';
+            const isActive = s.day === this.activeDay ? 'active' : '';
             const isRest = s.isRest ? 'rest' : '';
             return `
               <div class="day-tab ${isActive} ${isRest}" data-day="${s.day}">

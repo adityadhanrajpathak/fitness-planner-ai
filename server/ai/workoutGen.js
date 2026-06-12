@@ -123,6 +123,7 @@ function adjustForGoal(exercise, goal) {
         : ex.reps;
       ex.rest = Math.max(30, ex.rest - 15);
       break;
+    case 'build_muscle':
     case 'gain_muscle':
       // Moderate reps, longer rest for hypertrophy
       ex.sets = Math.min(5, ex.sets + 1);

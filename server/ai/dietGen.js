@@ -10,11 +10,13 @@ const { analyzeProfile } = require('./engine');
  * Filter foods based on dietary restrictions
  */
 function filterByRestrictions(foodList, restrictions) {
+  // Normalize restriction names: convert hyphens to underscores for consistent comparison
+  const normalized = restrictions.map(r => r.replace(/-/g, '_'));
   return foodList.filter(food => {
-    if (restrictions.includes('vegetarian') && !food.veg) return false;
-    if (restrictions.includes('vegan') && !food.vegan) return false;
-    if (restrictions.includes('gluten_free') && !food.gluten_free) return false;
-    if (restrictions.includes('lactose_free') && !food.vegan && food.description && food.description.toLowerCase().includes('yogurt')) return false;
+    if (normalized.includes('vegetarian') && !food.veg) return false;
+    if (normalized.includes('vegan') && !food.vegan) return false;
+    if (normalized.includes('gluten_free') && !food.gluten_free) return false;
+    if (normalized.includes('lactose_free') && !food.vegan && food.description && food.description.toLowerCase().includes('yogurt')) return false;
     return true;
   });
 }

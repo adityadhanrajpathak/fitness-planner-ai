@@ -150,5 +150,14 @@ const API = {
 
   async getProgress() {
     return this.request('/user/progress');
+  },
+
+  // ─── Admin ────────────────────────────────────────────────
+  async getAdminStats() {
+    return this.request('/admin/stats');
+  },
+
+  async getAdminUsers() {
+    return this.request('/admin/users');
   }
 };

@@ -501,112 +501,236 @@ ul, ol { list-style: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   AUTH PAGES
+   AUTH PAGES — CUTE LAMP LOGIN
    ═══════════════════════════════════════════════════════════ */
 .auth-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
+  background: #0a0e2a;
   position: relative;
   overflow: hidden;
   padding: 2rem;
 }
 
+/* Subtle grid background */
 .auth-bg {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-.auth-orb {
+.auth-grid {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: orbFloat 15s ease-in-out infinite;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
-.auth-orb-1 {
-  width: 400px;
-  height: 400px;
-  background: var(--accent-cyan);
-  top: -100px;
-  right: -100px;
-  animation-delay: 0s;
-}
-
-.auth-orb-2 {
-  width: 350px;
-  height: 350px;
-  background: var(--accent-purple);
-  bottom: -80px;
-  left: -80px;
-  animation-delay: -5s;
-}
-
-.auth-orb-3 {
-  width: 250px;
-  height: 250px;
-  background: var(--accent-pink);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation-delay: -10s;
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 440px;
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(30px);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-xl);
-  padding: 2.5rem;
+/* Outer glowing frame */
+.lamp-login-frame {
   position: relative;
   z-index: 1;
-  box-shadow: var(--shadow-lg);
-  animation: cardAppear 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: rgba(10, 14, 42, 0.85);
+  border: 2px solid rgba(52, 211, 153, 0.35);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 0 30px rgba(52, 211, 153, 0.1),
+    0 0 80px rgba(52, 211, 153, 0.05),
+    inset 0 0 60px rgba(52, 211, 153, 0.03);
+  padding: 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  animation: frameAppear 0.7s ease;
+  transition: max-width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes cardAppear {
-  from { opacity: 0; transform: translateY(20px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+/* When revealed, expand to fit both lamp + card */
+.lamp-login-frame.revealed {
+  max-width: 820px;
+}
+
+/* Hint text — click the lamp */
+.lamp-login-frame::after {
+  content: '💡 Click the lamp to login';
+  position: absolute;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  animation: hintPulse 2s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+  white-space: nowrap;
+}
+
+.lamp-login-frame.revealed::after {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes frameAppear {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Lamp Scene (Left Column) ─────────────────────────── */
+.lamp-scene {
+  position: relative;
+  width: 300px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.lamp-svg {
+  width: 240px;
+  height: auto;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 4px 20px rgba(126, 207, 192, 0.25));
+  animation: lampBreathe 4s ease-in-out infinite;
+}
+
+@keyframes lampBreathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Light beam effect — starts dimmed */
+.lamp-light-beam {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 320px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 240, 180, 0.3) 0%,
+    rgba(255, 240, 180, 0.12) 30%,
+    rgba(255, 240, 180, 0.04) 60%,
+    transparent 100%
+  );
+  clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.3;
+  transition: opacity 0.6s ease;
+}
+
+/* When lamp is "on" after click */
+.lamp-light-beam.on {
+  opacity: 1;
+  animation: beamPulse 3s ease-in-out infinite;
+}
+
+@keyframes beamPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.lamp-light-beam.off {
+  opacity: 0 !important;
+  animation: none;
+  transition: opacity 0.5s ease;
+}
+
+.lamp-light-beam:not(.off) {
+  transition: opacity 0.5s ease;
+}
+
+/* Cord interaction */
+.lamp-cord {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.lamp-cord-pull {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.lamp-cord-pull:hover {
+  fill: var(--accent-cyan);
+}
+
+/* ─── Auth Card (Right Column) — starts hidden ─────────── */
+.auth-card {
+  flex: 1;
+  background: rgba(15, 20, 50, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  position: relative;
+  box-shadow:
+    0 0 20px rgba(52, 211, 153, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  /* Hidden by default */
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  transition: max-width 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+              opacity 0.5s ease 0.3s,
+              padding 0.5s ease 0.1s,
+              border 0.3s ease 0.3s;
+}
+
+/* Revealed state */
+.lamp-login-frame.revealed .auth-card {
+  max-width: 500px;
+  opacity: 1;
+  padding: 2rem;
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  overflow: visible;
 }
 
 .auth-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  text-align: left;
+  margin-bottom: 1.75rem;
 }
 
 .auth-header .auth-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  display: block;
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+  display: none; /* hidden in lamp design */
 }
 
 .auth-header h2 {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
+  color: #f1f5f9;
 }
 
 .auth-header p {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-/* Form Elements */
+/* Form Elements — Lamp Style */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.1rem;
   position: relative;
 }
 
@@ -615,31 +739,31 @@ ul, ol { list-style: none; }
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.02em;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.8rem 1rem;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  background: rgba(10, 14, 42, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: var(--transition-fast);
   outline: none;
 }
 
 .form-input:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+  background: rgba(15, 20, 50, 0.8);
 }
 
 .form-input::placeholder {
   color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .form-input.error {
@@ -658,12 +782,12 @@ ul, ol { list-style: none; }
 
 .form-select {
   width: 100%;
-  padding: 0.8rem 1rem;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  background: rgba(10, 14, 42, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: var(--transition-fast);
   outline: none;
   appearance: none;
@@ -674,8 +798,8 @@ ul, ol { list-style: none; }
 }
 
 .form-select:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
 }
 
 .form-select option {
@@ -702,14 +826,14 @@ ul, ol { list-style: none; }
 .strength-bar.medium { background: var(--accent-orange); }
 .strength-bar.strong { background: var(--accent-green); }
 
-/* Buttons */
+/* Buttons — Login green */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.8rem 1.5rem;
-  border-radius: var(--radius-md);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
   font-size: 0.95rem;
   font-weight: 600;
   transition: var(--transition-base);
@@ -718,15 +842,17 @@ ul, ol { list-style: none; }
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
-  color: white;
+  background: var(--accent-green);
+  color: #0a0e2a;
   width: 100%;
-  box-shadow: var(--shadow-glow-cyan);
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+  border: none;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.25);
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.35);
+  background: #3fe0a8;
 }
 
 .btn-primary:active {
@@ -747,17 +873,17 @@ ul, ol { list-style: none; }
 
 .btn-secondary:hover {
   background: var(--bg-glass-hover);
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-green);
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--border-accent);
-  color: var(--accent-cyan);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: var(--accent-green);
 }
 
 .btn-outline:hover {
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(52, 211, 153, 0.1);
 }
 
 .btn-danger {
@@ -782,7 +908,7 @@ ul, ol { list-style: none; }
 
 .btn-icon:hover {
   background: var(--bg-glass-hover);
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-green);
 }
 
 /* Loading spinner */
@@ -796,8 +922,8 @@ ul, ol { list-style: none; }
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid rgba(10, 14, 42, 0.3);
+  border-top-color: #0a0e2a;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -808,19 +934,61 @@ ul, ol { list-style: none; }
 
 .auth-switch {
   text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 .auth-switch a {
-  color: var(--accent-cyan);
+  color: var(--accent-green);
   font-weight: 600;
   transition: var(--transition-fast);
 }
 
 .auth-switch a:hover {
   text-decoration: underline;
+}
+
+/* Forgot password link */
+.form-footer {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.form-footer a {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  transition: var(--transition-fast);
+}
+
+.form-footer a:hover {
+  color: var(--accent-green);
+  text-decoration: underline;
+}
+
+/* ─── Responsive: Stack on mobile ────────────────────────── */
+@media (max-width: 700px) {
+  .lamp-login-frame {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .lamp-scene {
+    width: 100%;
+    min-height: 200px;
+  }
+
+  .lamp-svg {
+    width: 140px;
+  }
+
+  .lamp-light-beam {
+    height: 160px;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

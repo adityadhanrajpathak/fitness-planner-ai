@@ -54,6 +54,8 @@ const App = {
             if (mobileAvatar) mobileAvatar.innerText = firstChar;
             if (userName) userName.innerText = user.name;
             if (userEmail) userEmail.innerText = user.email;
+
+
           }
 
           // Initialize routing
@@ -129,6 +131,7 @@ const App = {
         case 'progress':
           this.initProgressView();
           break;
+
         default:
           window.location.hash = '#dashboard';
       }
@@ -170,6 +173,37 @@ const App = {
         this.checkAuthState();
       });
     }
+
+    // Lamp interaction — click lamp to reveal login form
+    document.addEventListener('click', (e) => {
+      const lampScene = e.target.closest('.lamp-scene');
+      if (!lampScene) return;
+
+      const beam = document.querySelector('.lamp-light-beam');
+      const card = document.querySelector('.auth-card');
+      const frame = document.querySelector('.lamp-login-frame');
+
+      // Toggle light beam pull animation
+      const pull = document.querySelector('.lamp-cord-pull');
+      if (pull) {
+        pull.style.transform = 'translateY(8px)';
+        setTimeout(() => { pull.style.transform = ''; }, 200);
+      }
+
+      // If card is already revealed, do nothing (just cord pull animation)
+      if (frame && frame.classList.contains('revealed')) return;
+
+      // Turn on the light
+      if (beam) {
+        beam.classList.remove('off');
+        beam.classList.add('on');
+      }
+
+      // Reveal the login card
+      if (frame) {
+        frame.classList.add('revealed');
+      }
+    });
   },
 
   // ─── Toast Notifications ─────────────────────────────────

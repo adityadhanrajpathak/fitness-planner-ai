@@ -22,6 +22,7 @@ db.exec(`
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     name TEXT NOT NULL,
+    is_admin INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -89,7 +90,7 @@ const findUserByEmail = db.prepare(`
 `);
 
 const findUserById = db.prepare(`
-  SELECT id, email, name, created_at FROM users WHERE id = ?
+  SELECT id, email, name, is_admin, created_at FROM users WHERE id = ?
 `);
 
 // ─── Profile Queries ────────────────────────────────────────
@@ -165,6 +166,19 @@ const getLatestProgress = db.prepare(`
   SELECT * FROM progress_logs WHERE user_id = ? ORDER BY date DESC LIMIT 30
 `);
 
+// ─── Admin Queries ──────────────────────────────────────────
+
+const getAllUsers = db.prepare(`
+  SELECT id, email, name, is_admin, created_at FROM users ORDER BY created_at DESC
+`);
+
+const getPlatformStats = db.prepare(`
+  SELECT 
+    (SELECT COUNT(*) FROM users) as totalUsers,
+    (SELECT COUNT(*) FROM workout_plans WHERE is_active = 1) as activeWorkoutPlans,
+    (SELECT COUNT(*) FROM progress_logs) as totalProgressLogs
+`);
+
 module.exports = {
   db,
   createUser,
@@ -181,5 +195,7 @@ module.exports = {
   getActiveDietPlan,
   insertProgress,
   getProgressByDateRange,
-  getLatestProgress
+  getLatestProgress,
+  getAllUsers,
+  getPlatformStats
 };

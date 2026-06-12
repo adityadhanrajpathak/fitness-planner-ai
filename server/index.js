@@ -18,6 +18,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/workout', require('./routes/workout'));
 app.use('/api/diet', require('./routes/diet'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ─── Health Check ───────────────────────────────────────────
 app.get('/api/health', (req, res) => {
