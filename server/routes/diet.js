@@ -7,9 +7,9 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // ─── Generate New Diet Plan ─────────────────────────────────
-router.post('/generate', (req, res) => {
+router.post('/generate', async (req, res) => {
   try {
-    const profile = getProfile.get(req.userId);
+    const profile = await getProfile.get(req.userId);
     if (!profile) {
       return res.status(400).json({ error: 'Please complete your profile first.' });
     }
@@ -22,9 +22,8 @@ router.post('/generate', (req, res) => {
 
     const plan = generateDietPlan(parsed);
 
-    // Deactivate old plans and save new one
-    deactivateDietPlans.run(req.userId);
-    insertDietPlan.run(req.userId, JSON.stringify(plan));
+    await deactivateDietPlans.run(req.userId);
+    await insertDietPlan.run(req.userId, JSON.stringify(plan));
 
     res.json({ plan });
   } catch (err) {
@@ -34,12 +33,15 @@ router.post('/generate', (req, res) => {
 });
 
 // ─── Get Active Diet Plan ───────────────────────────────────
-router.get('/current', (req, res) => {
-  const planRow = getActiveDietPlan.get(req.userId);
-  if (!planRow) {
-    return res.json({ plan: null });
+router.get('/current', async (req, res) => {
+  try {
+    const planRow = await getActiveDietPlan.get(req.userId);
+    if (!planRow) return res.json({ plan: null });
+    res.json({ plan: JSON.parse(planRow.plan_data), id: planRow.id, createdAt: planRow.created_at });
+  } catch (err) {
+    console.error('Get diet error:', err);
+    res.status(500).json({ error: 'Failed to fetch diet plan.' });
   }
-  res.json({ plan: JSON.parse(planRow.plan_data), id: planRow.id, createdAt: planRow.created_at });
 });
 
 module.exports = router;

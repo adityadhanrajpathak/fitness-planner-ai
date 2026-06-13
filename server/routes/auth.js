@@ -1,7 +1,7 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
+const bcrypt  = require('bcryptjs');
+const jwt     = require('jsonwebtoken');
+const config  = require('../config');
 const { createUser, findUserByEmail, findUserById } = require('../models/database');
 const authMiddleware = require('../middleware/auth');
 
@@ -15,29 +15,22 @@ router.post('/register', async (req, res) => {
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required.' });
     }
-
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     }
 
-    const existing = findUserByEmail.get(email);
+    const existing = await findUserByEmail.get(email.toLowerCase().trim());
     if (existing) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
     const passwordHash = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
-    const result = createUser.run(email.toLowerCase().trim(), passwordHash, name.trim());
+    const result = await createUser.run(email.toLowerCase().trim(), passwordHash, name.trim());
 
     const userId = Number(result.lastInsertRowid);
+    const token  = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
 
-    const token = jwt.sign({ userId }, config.JWT_SECRET, {
-      expiresIn: config.JWT_EXPIRES_IN
-    });
-
-    res.status(201).json({
-      token,
-      user: { id: userId, email, name, is_admin: 0 }
-    });
+    res.status(201).json({ token, user: { id: userId, email, name, is_admin: 0 } });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Server error during registration.' });
@@ -53,24 +46,18 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const user = findUserByEmail.get(email.toLowerCase().trim());
+    const user = await findUserByEmail.get(email.toLowerCase().trim());
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, {
-      expiresIn: config.JWT_EXPIRES_IN
-    });
-
-    res.json({
-      token,
-      user: { id: user.id, email: user.email, name: user.name, is_admin: user.is_admin }
-    });
+    const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, is_admin: user.is_admin } });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error during login.' });
@@ -78,12 +65,15 @@ router.post('/login', async (req, res) => {
 });
 
 // ─── Get Current User ───────────────────────────────────────
-router.get('/me', authMiddleware, (req, res) => {
-  const user = findUserById.get(req.userId);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found.' });
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await findUserById.get(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ user });
+  } catch (err) {
+    console.error('Me error:', err);
+    res.status(500).json({ error: 'Server error.' });
   }
-  res.json({ user });
 });
 
 module.exports = router;

@@ -3,12 +3,10 @@ const authMiddleware = require('../middleware/auth');
 const { upsertProfile, getProfile, insertProgress, getLatestProgress } = require('../models/database');
 
 const router = express.Router();
-
-// All routes require auth
 router.use(authMiddleware);
 
 // ─── Save/Update Profile ────────────────────────────────────
-router.put('/profile', (req, res) => {
+router.put('/profile', async (req, res) => {
   try {
     const {
       age, gender, height, weight,
@@ -18,7 +16,7 @@ router.put('/profile', (req, res) => {
       workout_days, workout_duration
     } = req.body;
 
-    upsertProfile.run(
+    await upsertProfile.run(
       req.userId,
       age || null,
       gender || null,
@@ -35,7 +33,7 @@ router.put('/profile', (req, res) => {
       workout_duration || 45
     );
 
-    const profile = getProfile.get(req.userId);
+    const profile = await getProfile.get(req.userId);
     res.json({ profile: parseProfile(profile) });
   } catch (err) {
     console.error('Profile update error:', err);
@@ -44,20 +42,23 @@ router.put('/profile', (req, res) => {
 });
 
 // ─── Get Profile ────────────────────────────────────────────
-router.get('/profile', (req, res) => {
-  const profile = getProfile.get(req.userId);
-  if (!profile) {
-    return res.json({ profile: null });
+router.get('/profile', async (req, res) => {
+  try {
+    const profile = await getProfile.get(req.userId);
+    if (!profile) return res.json({ profile: null });
+    res.json({ profile: parseProfile(profile) });
+  } catch (err) {
+    console.error('Get profile error:', err);
+    res.status(500).json({ error: 'Failed to fetch profile.' });
   }
-  res.json({ profile: parseProfile(profile) });
 });
 
 // ─── Log Progress ───────────────────────────────────────────
-router.post('/progress', (req, res) => {
+router.post('/progress', async (req, res) => {
   try {
     const { date, weight, workout_completed, calories_consumed, water_intake, notes } = req.body;
-    
-    insertProgress.run(
+
+    await insertProgress.run(
       req.userId,
       date || new Date().toISOString().split('T')[0],
       weight || null,
@@ -75,9 +76,14 @@ router.post('/progress', (req, res) => {
 });
 
 // ─── Get Progress History ───────────────────────────────────
-router.get('/progress', (req, res) => {
-  const logs = getLatestProgress.all(req.userId);
-  res.json({ progress: logs });
+router.get('/progress', async (req, res) => {
+  try {
+    const logs = await getLatestProgress.all(req.userId);
+    res.json({ progress: logs });
+  } catch (err) {
+    console.error('Get progress error:', err);
+    res.status(500).json({ error: 'Failed to fetch progress.' });
+  }
 });
 
 // ─── Helper ─────────────────────────────────────────────────
