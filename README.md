@@ -1,8 +1,8 @@
-# 🏋️ Fitness Planner
+# 🏋️ Fitness Planner AI
 
 **Personalized Workout & Diet Planner — powered by a built-in AI engine.**
 
-Fitness Planner generates custom workout routines and meal plans tailored to your body metrics, fitness goals, cultural food preferences, and budget — all without requiring any external API keys.
+Fitness Planner AI generates custom workout routines and meal plans tailored to your body metrics, fitness goals, cultural food preferences, and budget — all without requiring any external API keys.
 
 ---
 
@@ -15,6 +15,7 @@ Fitness Planner generates custom workout routines and meal plans tailored to you
 | **Diet Generator** | Meal plans aligned with your calorie/macro needs, food preferences, and budget |
 | **User Dashboard** | At-a-glance health stats, progress overview, and daily recommendations |
 | **Profile System** | Detailed user profiles with age, weight, height, activity level, and goal tracking |
+| **Admin Panel** | Administrator-only routes with role-based access control |
 | **Auth System** | JWT-based registration & login with bcrypt password hashing |
 | **Responsive UI** | Mobile-first design with sidebar navigation, toast notifications, and loading transitions |
 
@@ -32,7 +33,9 @@ Fitness Planner generates custom workout routines and meal plans tailored to you
 - **better-sqlite3** — lightweight embedded SQLite database
 - **jsonwebtoken** — JWT authentication
 - **bcryptjs** — password hashing
+- **cors** — Cross-Origin Resource Sharing support
 - **dotenv** — environment variable management
+- **pptxgenjs** — PowerPoint presentation generation
 
 ---
 
@@ -57,20 +60,25 @@ fitness/
 │   ├── index.js             # Express server entry point
 │   ├── config.js            # Port, JWT secret, DB path
 │   ├── middleware/
-│   │   └── auth.js          # JWT verification middleware
+│   │   ├── auth.js          # JWT verification middleware
+│   │   └── admin.js         # Admin role-check middleware
 │   ├── models/
 │   │   └── database.js      # SQLite schema & queries
 │   ├── routes/
 │   │   ├── auth.js          # POST /api/auth/register & /login
 │   │   ├── user.js          # GET/PUT /api/user/profile
 │   │   ├── workout.js       # GET /api/workout/generate
-│   │   └── diet.js          # GET /api/diet/generate
+│   │   ├── diet.js          # GET /api/diet/generate
+│   │   └── admin.js         # Admin-only routes
 │   └── ai/
 │       ├── engine.js        # Core AI — BMR, TDEE, BMI, macros
 │       ├── workoutGen.js    # Workout plan generation logic
 │       ├── dietGen.js       # Diet plan generation logic
 │       └── data.js          # Exercise & food databases
 │
+├── data/                    # Persistent SQLite database files
+├── migrate.js               # Database migration script
+├── generate_ppt.js          # PowerPoint report generator
 ├── package.json
 ├── .gitignore
 └── README.md
@@ -88,8 +96,8 @@ fitness/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/fitness-planner.git
-cd fitness-planner
+git clone https://github.com/<your-username>/fitness-planner-ai.git
+cd fitness-planner-ai
 
 # 2. Install dependencies
 npm install
@@ -98,7 +106,10 @@ npm install
 echo "PORT=3000" > .env
 echo "JWT_SECRET=your_secret_key" >> .env
 
-# 4. Start the development server (auto-restarts on file changes)
+# 4. (Optional) Run database migrations
+node migrate.js
+
+# 5. Start the development server (auto-restarts on file changes)
 npm run dev
 ```
 
@@ -110,6 +121,8 @@ The app will be available at **http://localhost:3000**.
 |---------|-------------|
 | `npm run dev` | Start dev server with file watching (`node --watch`) |
 | `npm start` | Start production server |
+| `node migrate.js` | Run database schema migrations |
+| `node generate_ppt.js` | Generate a PowerPoint summary report |
 
 ---
 
@@ -143,6 +156,12 @@ All API endpoints are prefixed with `/api`.
 |--------|----------|------|-------------|
 | `GET` | `/api/diet/generate` | 🔒 | Generate a personalized meal plan |
 
+### Admin
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `*` | `/api/admin/*` | 🔒👑 | Administrator-only routes |
+
 ### Health
 
 | Method | Endpoint | Description |
@@ -150,6 +169,8 @@ All API endpoints are prefixed with `/api`.
 | `GET` | `/api/health` | Server health check |
 
 > 🔒 Protected routes require an `Authorization: Bearer <token>` header.
+>
+> 👑 Admin routes additionally require the authenticated user to have administrator privileges (`is_admin = 1`).
 
 ---
 
@@ -166,6 +187,19 @@ The AI engine runs **entirely on the server** with no external API calls. It use
 | **BMI** | Standard formula with category classification |
 | **Water Intake** | 35 ml per kg body weight |
 | **Fitness Level** | Derived from activity level and age |
+
+---
+
+## 🔐 Role-Based Access Control
+
+The app supports two user roles:
+
+| Role | Description |
+|------|-------------|
+| **User** | Default role. Can manage their own profile, generate workout & diet plans. |
+| **Admin** | Elevated role (`is_admin = 1`). Has access to all `/api/admin/*` routes for platform management. |
+
+Authentication middleware (`auth.js`) validates JWTs on every protected route. The admin middleware (`admin.js`) runs after auth and additionally verifies administrator status.
 
 ---
 
