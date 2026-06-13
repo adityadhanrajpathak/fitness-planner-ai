@@ -1,7 +1,8 @@
 const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const config = require('./config');
+const path    = require('path');
+const cors    = require('cors');
+const config  = require('./config');
+const { initDatabase } = require('./models/database');
 
 const app = express();
 
@@ -14,11 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ─── API Routes ─────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/user', require('./routes/user'));
+app.use('/api/auth',    require('./routes/auth'));
+app.use('/api/user',    require('./routes/user'));
 app.use('/api/workout', require('./routes/workout'));
-app.use('/api/diet', require('./routes/diet'));
-app.use('/api/admin', require('./routes/admin'));
+app.use('/api/diet',    require('./routes/diet'));
+app.use('/api/admin',   require('./routes/admin'));
 
 // ─── Health Check ───────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -30,9 +31,17 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// ─── Start Server ───────────────────────────────────────────
-app.listen(config.PORT, () => {
-  console.log(`
+// ─── Bootstrap ──────────────────────────────────────────────
+// Initialise the database before accepting requests.
+// Works for both `npm run dev` (persistent process) and Vercel
+// serverless (cold-start awaits before the first request is served).
+async function bootstrap() {
+  await initDatabase();
+
+  // Only bind to a port when running as a regular Node process (not Vercel)
+  if (process.env.VERCEL !== '1') {
+    app.listen(config.PORT, () => {
+      console.log(`
   ╔═══════════════════════════════════════════════════╗
   ║                                                   ║
   ║   🏋️  Fitness Planner Server Running              ║
@@ -41,7 +50,14 @@ app.listen(config.PORT, () => {
   ║   → API:    http://localhost:${config.PORT}/api           ║
   ║                                                   ║
   ╚═══════════════════════════════════════════════════╝
-  `);
+      `);
+    });
+  }
+}
+
+bootstrap().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
 module.exports = app;

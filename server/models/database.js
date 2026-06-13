@@ -1,22 +1,67 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
-const config = require('../config');
+/**
+ * database.js — sql.js backed SQLite (Vercel-compatible, no native bindings)
+ *
+ * Exposes the same .get() / .all() / .run() API as better-sqlite3 so that
+ * all route files remain completely unchanged.
+ */
 
-// Ensure data directory exists
-const dataDir = path.dirname(config.DB_PATH);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+const path = require('path');
+const initSqlJs = require('sql.js');
+
+// ─── Singleton ───────────────────────────────────────────────
+let _db = null;
+
+function assertReady() {
+  if (!_db) throw new Error('Database not initialised. Ensure initDatabase() has resolved.');
 }
 
-const db = new Database(config.DB_PATH);
+// ─── Compatibility wrapper ───────────────────────────────────
+/**
+ * Returns an object with .get(), .all(), and .run() methods that mirror the
+ * better-sqlite3 prepared-statement API.
+ */
+function prepare(sql) {
+  return {
+    /** Returns the first matching row as a plain object, or undefined. */
+    get(...params) {
+      assertReady();
+      const stmt = _db.prepare(sql);
+      const flat = params.flat();
+      if (flat.length) stmt.bind(flat);
+      const row = stmt.step() ? stmt.getAsObject({}) : undefined;
+      stmt.free();
+      return row;
+    },
 
-// Enable WAL mode for better performance
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+    /** Returns all matching rows as an array of plain objects. */
+    all(...params) {
+      assertReady();
+      const stmt = _db.prepare(sql);
+      const flat = params.flat();
+      if (flat.length) stmt.bind(flat);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject({}));
+      stmt.free();
+      return rows;
+    },
 
-// Create tables
-db.exec(`
+    /** Executes an INSERT / UPDATE / DELETE and returns { changes, lastInsertRowid }. */
+    run(...params) {
+      assertReady();
+      const stmt = _db.prepare(sql);
+      const flat = params.flat();
+      if (flat.length) stmt.bind(flat);
+      stmt.step();
+      stmt.free();
+      const changes = _db.getRowsModified();
+      const lastId = _db.exec('SELECT last_insert_rowid()')[0]?.values[0]?.[0] ?? null;
+      return { changes, lastInsertRowid: lastId };
+    }
+  };
+}
+
+// ─── Schema ──────────────────────────────────────────────────
+const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
@@ -77,110 +122,80 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
-`);
+`;
 
-// ─── User Queries ───────────────────────────────────────────
+// ─── Init ────────────────────────────────────────────────────
+/**
+ * Initialises the in-memory SQLite database.
+ * Must be awaited before the HTTP server starts accepting requests.
+ */
+async function initDatabase() {
+  if (_db) return; // already initialised
 
-const createUser = db.prepare(`
-  INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)
-`);
+  const SQL = await initSqlJs({
+    // Point to the WASM file shipped with the sql.js package
+    locateFile: (file) => path.join(__dirname, '..', '..', 'node_modules', 'sql.js', 'dist', file)
+  });
 
-const findUserByEmail = db.prepare(`
-  SELECT * FROM users WHERE email = ?
-`);
+  _db = new SQL.Database();
+  _db.run('PRAGMA foreign_keys = ON;');
+  _db.run(SCHEMA);
+  console.log('✅ In-memory SQLite database initialised (sql.js)');
+}
 
-const findUserById = db.prepare(`
-  SELECT id, email, name, is_admin, created_at FROM users WHERE id = ?
-`);
+// ─── Prepared queries (same names as before) ─────────────────
 
-// ─── Profile Queries ────────────────────────────────────────
+// User
+const createUser          = prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
+const findUserByEmail     = prepare('SELECT * FROM users WHERE email = ?');
+const findUserById        = prepare('SELECT id, email, name, is_admin, created_at FROM users WHERE id = ?');
 
-const upsertProfile = db.prepare(`
-  INSERT INTO profiles (user_id, age, gender, height, weight, activity_level, fitness_goal, dietary_restrictions, cultural_preference, budget, equipment, meals_per_day, workout_days, workout_duration, updated_at)
+// Profile
+const upsertProfile = prepare(`
+  INSERT INTO profiles (user_id, age, gender, height, weight, activity_level, fitness_goal,
+    dietary_restrictions, cultural_preference, budget, equipment, meals_per_day,
+    workout_days, workout_duration, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   ON CONFLICT(user_id) DO UPDATE SET
-    age = excluded.age,
-    gender = excluded.gender,
-    height = excluded.height,
-    weight = excluded.weight,
-    activity_level = excluded.activity_level,
+    age = excluded.age, gender = excluded.gender, height = excluded.height,
+    weight = excluded.weight, activity_level = excluded.activity_level,
     fitness_goal = excluded.fitness_goal,
     dietary_restrictions = excluded.dietary_restrictions,
-    cultural_preference = excluded.cultural_preference,
-    budget = excluded.budget,
-    equipment = excluded.equipment,
-    meals_per_day = excluded.meals_per_day,
-    workout_days = excluded.workout_days,
-    workout_duration = excluded.workout_duration,
+    cultural_preference = excluded.cultural_preference, budget = excluded.budget,
+    equipment = excluded.equipment, meals_per_day = excluded.meals_per_day,
+    workout_days = excluded.workout_days, workout_duration = excluded.workout_duration,
     updated_at = CURRENT_TIMESTAMP
 `);
+const getProfile          = prepare('SELECT * FROM profiles WHERE user_id = ?');
 
-const getProfile = db.prepare(`
-  SELECT * FROM profiles WHERE user_id = ?
+// Workout plans
+const deactivateWorkoutPlans = prepare('UPDATE workout_plans SET is_active = 0 WHERE user_id = ?');
+const insertWorkoutPlan      = prepare('INSERT INTO workout_plans (user_id, plan_data) VALUES (?, ?)');
+const getActiveWorkoutPlan   = prepare('SELECT * FROM workout_plans WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1');
+const getWorkoutHistory      = prepare('SELECT id, created_at FROM workout_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 10');
+
+// Diet plans
+const deactivateDietPlans = prepare('UPDATE diet_plans SET is_active = 0 WHERE user_id = ?');
+const insertDietPlan      = prepare('INSERT INTO diet_plans (user_id, plan_data) VALUES (?, ?)');
+const getActiveDietPlan   = prepare('SELECT * FROM diet_plans WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1');
+
+// Progress
+const insertProgress         = prepare('INSERT INTO progress_logs (user_id, date, weight, workout_completed, calories_consumed, water_intake, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+const getProgressByDateRange = prepare('SELECT * FROM progress_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date ASC');
+const getLatestProgress      = prepare('SELECT * FROM progress_logs WHERE user_id = ? ORDER BY date DESC LIMIT 30');
+
+// Admin
+const getAllUsers       = prepare('SELECT id, email, name, is_admin, created_at FROM users ORDER BY created_at DESC');
+const getPlatformStats = prepare(`
+  SELECT
+    (SELECT COUNT(*) FROM users) AS totalUsers,
+    (SELECT COUNT(*) FROM workout_plans WHERE is_active = 1) AS activeWorkoutPlans,
+    (SELECT COUNT(*) FROM progress_logs) AS totalProgressLogs
 `);
 
-// ─── Workout Plan Queries ───────────────────────────────────
-
-const deactivateWorkoutPlans = db.prepare(`
-  UPDATE workout_plans SET is_active = 0 WHERE user_id = ?
-`);
-
-const insertWorkoutPlan = db.prepare(`
-  INSERT INTO workout_plans (user_id, plan_data) VALUES (?, ?)
-`);
-
-const getActiveWorkoutPlan = db.prepare(`
-  SELECT * FROM workout_plans WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1
-`);
-
-const getWorkoutHistory = db.prepare(`
-  SELECT id, created_at FROM workout_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 10
-`);
-
-// ─── Diet Plan Queries ──────────────────────────────────────
-
-const deactivateDietPlans = db.prepare(`
-  UPDATE diet_plans SET is_active = 0 WHERE user_id = ?
-`);
-
-const insertDietPlan = db.prepare(`
-  INSERT INTO diet_plans (user_id, plan_data) VALUES (?, ?)
-`);
-
-const getActiveDietPlan = db.prepare(`
-  SELECT * FROM diet_plans WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1
-`);
-
-// ─── Progress Queries ───────────────────────────────────────
-
-const insertProgress = db.prepare(`
-  INSERT INTO progress_logs (user_id, date, weight, workout_completed, calories_consumed, water_intake, notes)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
-
-const getProgressByDateRange = db.prepare(`
-  SELECT * FROM progress_logs WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date ASC
-`);
-
-const getLatestProgress = db.prepare(`
-  SELECT * FROM progress_logs WHERE user_id = ? ORDER BY date DESC LIMIT 30
-`);
-
-// ─── Admin Queries ──────────────────────────────────────────
-
-const getAllUsers = db.prepare(`
-  SELECT id, email, name, is_admin, created_at FROM users ORDER BY created_at DESC
-`);
-
-const getPlatformStats = db.prepare(`
-  SELECT 
-    (SELECT COUNT(*) FROM users) as totalUsers,
-    (SELECT COUNT(*) FROM workout_plans WHERE is_active = 1) as activeWorkoutPlans,
-    (SELECT COUNT(*) FROM progress_logs) as totalProgressLogs
-`);
-
+// ─── Exports ─────────────────────────────────────────────────
 module.exports = {
-  db,
+  initDatabase,
   createUser,
   findUserByEmail,
   findUserById,
