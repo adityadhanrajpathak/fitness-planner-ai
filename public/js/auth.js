@@ -62,7 +62,7 @@ const Auth = {
     } else {
       container.innerHTML = `
         <div class="auth-header">
-          <h2>Join Fitness Planner</h2>
+          <h2>Join Fitness Planner AI</h2>
           <p>Get your AI personalized diet & workout plans</p>
         </div>
         <form id="register-form">
