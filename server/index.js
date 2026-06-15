@@ -11,6 +11,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ─── Dynamic Sitemap for SEO ──────────────────────────────────
+app.get('/sitemap.xml', (req, res) => {
+  const host = req.headers.host;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const baseUrl = `${protocol}://${host}`;
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+
+  res.header('Content-Type', 'application/xml');
+  res.send(xml);
+});
+
 // ─── Serve Static Files ─────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
