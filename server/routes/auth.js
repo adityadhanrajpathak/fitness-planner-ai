@@ -35,7 +35,8 @@ router.post('/register', async (req, res) => {
     const userId = Number(result.lastInsertRowid);
     const token  = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
 
-    res.status(201).json({ token, user: { id: userId, email, name, is_admin: 0 } });
+    const isOwner = email.toLowerCase().trim() === 'adityadhanraj042@gmail.com';
+    res.status(201).json({ token, user: { id: userId, email, name, is_admin: isOwner ? 1 : 0 } });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Server error during registration.' });
@@ -61,9 +62,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Auto-promote the owner to admin on the live site
-    if (user.email === 'adityadhanraj042@gmail.com' && user.is_admin === 0) {
-      await require('../models/database').promoteUser.run(user.id);
+    const isOwner = user.email === 'adityadhanraj042@gmail.com';
+    if (isOwner) {
       user.is_admin = 1;
     }
 
@@ -80,6 +80,11 @@ router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await findUserById.get(req.userId);
     if (!user) return res.status(404).json({ error: 'User not found.' });
+    
+    if (user.email === 'adityadhanraj042@gmail.com') {
+      user.is_admin = 1;
+    }
+    
     res.json({ user });
   } catch (err) {
     console.error('Me error:', err);

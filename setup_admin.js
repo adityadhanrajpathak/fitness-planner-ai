@@ -29,7 +29,6 @@ async function createAdmin() {
     }
 
     console.log(`✅ Success! ${email} is now the Admin.`);
-    console.log(`Your temporary password is: ${password}`);
     
   } catch (err) {
     console.error('Error:', err);
