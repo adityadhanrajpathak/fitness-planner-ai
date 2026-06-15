@@ -3,6 +3,7 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const crypto  = require('crypto');
 const config  = require('../config');
+const { sendResetEmail } = require('../utils/mailer');
 const {
   createUser, findUserByEmail, findUserById,
   updateUserResetToken, findUserByResetToken, updateUserPassword, clearResetToken
@@ -81,29 +82,31 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // ─── Forgot Password ────────────────────────────────────────
-// Generates a 6-char reset token stored in the DB (15-min TTL).
-// In production this token would be emailed; here it is returned in the
-// response body so the frontend can display it directly.
+// Generates a 6-char token, emails it to the user.
+// The token is NEVER returned to the client — only sent via email
+// (or logged to the server console when SMTP is not configured).
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
     const user = await findUserByEmail.get(email.toLowerCase().trim());
-    if (!user) {
-      return res.status(404).json({ error: 'No account found with that email address.' });
+
+    // Always return the same response whether the email exists or not
+    // (prevents user enumeration attacks)
+    if (user) {
+      const resetToken = crypto.randomBytes(3).toString('hex').toUpperCase();
+      const expires    = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      await updateUserResetToken.run(resetToken, expires, user.id);
+      // Fire-and-forget — don't block the response
+      sendResetEmail(user.email, user.name, resetToken).catch(err =>
+        console.error('Email send error:', err)
+      );
     }
 
-    // 6-character uppercase hex token (e.g. "A3F9C2")
-    const resetToken = crypto.randomBytes(3).toString('hex').toUpperCase();
-    const expires    = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
-
-    await updateUserResetToken.run(resetToken, expires, user.id);
-
+    // Generic response — same for existing and non-existing emails
     res.json({
-      message: 'Reset token generated successfully.',
-      token: resetToken,           // displayed in UI — would be emailed in production
-      note: 'This token expires in 15 minutes.'
+      message: 'If an account with that email exists, a reset token has been sent.'
     });
   } catch (err) {
     console.error('Forgot password error:', err);

@@ -121,32 +121,33 @@ const Auth = {
     container.innerHTML = `
       <div class="auth-header">
         <h2>🔑 Forgot Password</h2>
-        <p>Enter your email to receive a reset token</p>
+        <p>Enter your email and we'll send you a reset token</p>
       </div>
-      <form id="forgot-form">
-        <div class="form-group">
-          <label class="form-label" for="forgot-email">Email Address</label>
-          <input class="form-input" type="email" id="forgot-email" required placeholder="name@domain.com">
-          <div class="form-error" id="forgot-email-error">Please enter a valid email.</div>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btn-forgot-submit">
-          <span>Generate Reset Token</span>
-        </button>
-      </form>
 
-      <!-- Token display box (hidden initially) -->
-      <div id="reset-token-box" style="display:none; margin-top:1.2rem; padding:1rem 1.2rem;
-           background: rgba(0,255,200,0.06); border:1px solid rgba(0,255,200,0.25);
-           border-radius:12px; text-align:center;">
-        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">
-          ⚠️ In production this token would be <strong>emailed</strong> to you.<br>
-          Your 6-digit reset token is:
+      <!-- Step 1: email input (shown first) -->
+      <div id="forgot-step-1">
+        <form id="forgot-form">
+          <div class="form-group">
+            <label class="form-label" for="forgot-email">Email Address</label>
+            <input class="form-input" type="email" id="forgot-email" required placeholder="name@domain.com">
+            <div class="form-error" id="forgot-email-error">Please enter a valid email.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-forgot-submit">
+            <span>Send Reset Token</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Step 2: confirmation (hidden until email sent) -->
+      <div id="forgot-step-2" style="display:none; text-align:center; padding: 0.5rem 0;">
+        <div style="font-size:3rem; margin-bottom:1rem;">📬</div>
+        <h3 style="margin:0 0 0.5rem; font-size:1.1rem; color:var(--accent-cyan);">Check your email!</h3>
+        <p style="margin:0 0 1.2rem; font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+          If an account exists for that email address, we've sent a 6-character reset token.<br>
+          <strong style="color:var(--text-primary);">The token expires in 15 minutes.</strong>
         </p>
-        <div id="token-display" style="font-size:2rem; font-weight:800; letter-spacing:0.3em;
-             color:var(--accent-cyan); margin:0.4rem 0;"></div>
-        <p style="font-size:0.72rem; color:var(--text-muted);">⏳ Expires in 15 minutes</p>
-        <button id="btn-go-reset" class="btn btn-primary" style="margin-top:0.8rem; width:100%;">
-          <span>Enter New Password →</span>
+        <button id="btn-enter-token" class="btn btn-primary" style="width:100%;">
+          <span>I have my token →</span>
         </button>
       </div>
 
@@ -275,32 +276,21 @@ const Auth = {
 
     this.setLoading(btn, true);
     try {
-      const data = await API.forgotPassword(email);
+      await API.forgotPassword(email);
 
-      // Show the token box
-      const tokenBox = document.getElementById('reset-token-box');
-      const tokenDisplay = document.getElementById('token-display');
-      if (tokenBox && tokenDisplay) {
-        tokenDisplay.textContent = data.token;
-        tokenBox.style.display = 'block';
+      // Hide the form, show the confirmation
+      const step1 = document.getElementById('forgot-step-1');
+      const step2 = document.getElementById('forgot-step-2');
+      if (step1) step1.style.display = 'none';
+      if (step2) step2.style.display = 'block';
+
+      // Wire the "I have my token" button
+      const enterBtn = document.getElementById('btn-enter-token');
+      if (enterBtn) {
+        enterBtn.addEventListener('click', () => this.switchView('reset'));
       }
-
-      // Wire the "proceed" button
-      const goBtn = document.getElementById('btn-go-reset');
-      if (goBtn) {
-        goBtn.addEventListener('click', () => {
-          this._renderReset(document.getElementById('auth-card'), data.token);
-        });
-      }
-
-      App.showToast('Reset token generated! See it below.', 'success');
     } catch (err) {
       App.showToast(err.message, 'error');
-      const emailError = document.getElementById('forgot-email-error');
-      if (emailError) {
-        emailError.innerText = err.message;
-        emailError.classList.add('show');
-      }
     } finally {
       this.setLoading(btn, false);
     }
