@@ -136,6 +136,12 @@ const updateUserPassword   = prepare('UPDATE users SET password_hash = ? WHERE i
 const clearResetToken      = prepare('UPDATE users SET password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?');
 const promoteUser          = prepare('UPDATE users SET is_admin = 1 WHERE id = ?');
 const demoteUser           = prepare('UPDATE users SET is_admin = 0 WHERE id = ?');
+const getPendingResetTokens = prepare(
+  `SELECT id, name, email, password_reset_token, password_reset_expires
+   FROM users
+   WHERE password_reset_token IS NOT NULL
+   ORDER BY password_reset_expires ASC`
+);
 
 // Profiles
 const upsertProfile = prepare(`
@@ -186,7 +192,7 @@ module.exports = {
   initDatabase,
   createUser, findUserByEmail, findUserById,
   updateUserResetToken, findUserByResetToken, updateUserPassword, clearResetToken,
-  promoteUser, demoteUser,
+  promoteUser, demoteUser, getPendingResetTokens,
   upsertProfile, getProfile,
   deactivateWorkoutPlans, insertWorkoutPlan, getActiveWorkoutPlan, getWorkoutHistory,
   deactivateDietPlans, insertDietPlan, getActiveDietPlan,

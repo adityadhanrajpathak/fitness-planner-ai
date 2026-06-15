@@ -181,5 +181,13 @@ const API = {
 
   async demoteUser(userId) {
     return this.request(`/admin/users/${userId}/demote`, { method: 'POST' });
+  },
+
+  async getAuthActivity() {
+    return this.request('/admin/auth-activity');
+  },
+
+  async revokeResetToken(userId) {
+    return this.request(`/admin/auth-activity/${userId}`, { method: 'DELETE' });
   }
 };
