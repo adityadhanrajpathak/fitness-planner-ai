@@ -61,6 +61,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
+    // Auto-promote the owner to admin on the live site
+    if (user.email === 'adityadhanraj042@gmail.com' && user.is_admin === 0) {
+      await require('../models/database').promoteUser.run(user.id);
+      user.is_admin = 1;
+    }
+
     const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
     res.json({ token, user: { id: user.id, email: user.email, name: user.name, is_admin: user.is_admin } });
   } catch (err) {
