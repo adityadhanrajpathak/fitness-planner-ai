@@ -45,17 +45,21 @@ const App = {
           const user = API.getUser();
           if (user) {
             const firstChar = user.name ? user.name.charAt(0).toUpperCase() : 'U';
-            const userAvatar = document.getElementById('user-avatar');
+            const userAvatar   = document.getElementById('user-avatar');
             const mobileAvatar = document.getElementById('mobile-avatar');
-            const userName = document.getElementById('user-name');
-            const userEmail = document.getElementById('user-email');
+            const userName     = document.getElementById('user-name');
+            const userEmail    = document.getElementById('user-email');
 
-            if (userAvatar) userAvatar.innerText = firstChar;
+            if (userAvatar)   userAvatar.innerText   = firstChar;
             if (mobileAvatar) mobileAvatar.innerText = firstChar;
-            if (userName) userName.innerText = user.name;
-            if (userEmail) userEmail.innerText = user.email;
+            if (userName)     userName.innerText     = user.name;
+            if (userEmail)    userEmail.innerText    = user.email;
 
-
+            // Show Admin nav link only for admins
+            const adminNavItem = document.getElementById('nav-admin-item');
+            if (adminNavItem) {
+              adminNavItem.style.display = user.is_admin === 1 ? 'block' : 'none';
+            }
           }
 
           // Initialize routing
@@ -131,7 +135,16 @@ const App = {
         case 'progress':
           this.initProgressView();
           break;
-
+        case 'admin': {
+          const user = API.getUser();
+          if (!user || user.is_admin !== 1) {
+            this.showToast('Access denied. Admin only.', 'error');
+            window.location.hash = '#dashboard';
+            return;
+          }
+          Admin.init();
+          break;
+        }
         default:
           window.location.hash = '#dashboard';
       }

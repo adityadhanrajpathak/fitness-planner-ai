@@ -106,6 +106,20 @@ const API = {
     this.removeUser();
   },
 
+  // ─── Password Reset ──────────────────────────────────────
+  async forgotPassword(email) {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: { email }
+    });
+  },
+
+  async resetPassword(token, newPassword) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: { token, newPassword }
+    });
+  },
   // ─── Profile ────────────────────────────────────────────
   async getProfile() {
     return this.request('/user/profile');
@@ -159,5 +173,13 @@ const API = {
 
   async getAdminUsers() {
     return this.request('/admin/users');
+  },
+
+  async promoteUser(userId) {
+    return this.request(`/admin/users/${userId}/promote`, { method: 'POST' });
+  },
+
+  async demoteUser(userId) {
+    return this.request(`/admin/users/${userId}/demote`, { method: 'POST' });
   }
 };

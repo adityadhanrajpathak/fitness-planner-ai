@@ -27,6 +27,7 @@ const Admin = {
                   <th>Email</th>
                   <th>Role</th>
                   <th>Joined</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="admin-users-tbody">
@@ -75,34 +76,67 @@ const Admin = {
     const tbody = document.getElementById('admin-users-tbody');
     if (!tbody) return;
 
+    const currentUser = API.getUser();
+
     try {
       const { users } = await API.getAdminUsers();
 
       if (!users || users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No users found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No users found.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = users.map(user => {
         const joined = new Date(user.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' });
-        const roleBadge = user.is_admin 
-          ? `<span class="muscle-badge chest" style="padding:0.1rem 0.4rem; font-size:0.65rem; background: var(--accent-pink); color: white;">ADMIN</span>`
-          : `<span class="muscle-badge" style="padding:0.1rem 0.4rem; font-size:0.65rem;">USER</span>`;
-          
+        const isAdmin = user.is_admin === 1;
+        const isSelf  = currentUser && user.id === currentUser.id;
+
+        const roleBadge = isAdmin
+          ? `<span style="padding:0.15rem 0.5rem; font-size:0.65rem; border-radius:6px; background:var(--accent-pink); color:#fff; font-weight:700;">ADMIN</span>`
+          : `<span style="padding:0.15rem 0.5rem; font-size:0.65rem; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text-muted); font-weight:600;">USER</span>`;
+
+        const actionBtn = isSelf
+          ? `<span style="font-size:0.7rem; color:var(--text-muted);">— you —</span>`
+          : isAdmin
+            ? `<button onclick="Admin.demote(${user.id})" style="padding:0.25rem 0.7rem; font-size:0.7rem; border-radius:6px; background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.4); color:#f87171; cursor:pointer;">Demote</button>`
+            : `<button onclick="Admin.promote(${user.id})" style="padding:0.25rem 0.7rem; font-size:0.7rem; border-radius:6px; background:rgba(52,211,153,0.15); border:1px solid rgba(52,211,153,0.4); color:#34d399; cursor:pointer;">Make Admin</button>`;
+
         return `
           <tr>
             <td>#${user.id}</td>
             <td><strong>${user.name}</strong></td>
-            <td>${user.email}</td>
+            <td style="color:var(--text-muted); font-size:0.85rem;">${user.email}</td>
             <td>${roleBadge}</td>
-            <td>${joined}</td>
+            <td style="color:var(--text-muted); font-size:0.8rem;">${joined}</td>
+            <td>${actionBtn}</td>
           </tr>
         `;
       }).join('');
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-red">Failed to load users: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red">Failed to load users: ${err.message}</td></tr>`;
+    }
+  },
+
+  async promote(userId) {
+    try {
+      await API.promoteUser(userId);
+      App.showToast('User promoted to admin!', 'success');
+      await this.loadUsers();
+    } catch (err) {
+      App.showToast(err.message, 'error');
+    }
+  },
+
+  async demote(userId) {
+    try {
+      await API.demoteUser(userId);
+      App.showToast('User demoted to regular user.', 'info');
+      await this.loadUsers();
+    } catch (err) {
+      App.showToast(err.message, 'error');
     }
   }
 };
 
 window.Admin = Admin;
+

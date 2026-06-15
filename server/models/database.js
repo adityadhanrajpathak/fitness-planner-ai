@@ -84,6 +84,15 @@ async function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`
   ], 'write');
+
+  // Add password-reset columns to users if they don't exist yet (idempotent)
+  for (const sql of [
+    'ALTER TABLE users ADD COLUMN password_reset_token TEXT',
+    'ALTER TABLE users ADD COLUMN password_reset_expires TEXT'
+  ]) {
+    try { await db.execute(sql); } catch (_) { /* column already exists — safe to ignore */ }
+  }
+
   console.log('✅ Turso/libsql database ready');
 }
 
@@ -118,9 +127,15 @@ function prepare(sql) {
 // ─── Prepared queries ────────────────────────────────────────
 
 // Users
-const createUser      = prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
-const findUserByEmail = prepare('SELECT * FROM users WHERE email = ?');
-const findUserById    = prepare('SELECT id, email, name, is_admin, created_at FROM users WHERE id = ?');
+const createUser           = prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
+const findUserByEmail      = prepare('SELECT * FROM users WHERE email = ?');
+const findUserById         = prepare('SELECT id, email, name, is_admin, created_at FROM users WHERE id = ?');
+const updateUserResetToken = prepare('UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?');
+const findUserByResetToken = prepare('SELECT * FROM users WHERE password_reset_token = ?');
+const updateUserPassword   = prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+const clearResetToken      = prepare('UPDATE users SET password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?');
+const promoteUser          = prepare('UPDATE users SET is_admin = 1 WHERE id = ?');
+const demoteUser           = prepare('UPDATE users SET is_admin = 0 WHERE id = ?');
 
 // Profiles
 const upsertProfile = prepare(`
@@ -170,6 +185,8 @@ const getPlatformStats = prepare(`
 module.exports = {
   initDatabase,
   createUser, findUserByEmail, findUserById,
+  updateUserResetToken, findUserByResetToken, updateUserPassword, clearResetToken,
+  promoteUser, demoteUser,
   upsertProfile, getProfile,
   deactivateWorkoutPlans, insertWorkoutPlan, getActiveWorkoutPlan, getWorkoutHistory,
   deactivateDietPlans, insertDietPlan, getActiveDietPlan,
