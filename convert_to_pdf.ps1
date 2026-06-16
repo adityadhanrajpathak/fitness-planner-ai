@@ -1,6 +1,6 @@
 $pptApp = New-Object -ComObject PowerPoint.Application
 $pptApp.Visible = 1
-$pptPath = "C:\Users\adity\OneDrive\Documents\Desktop\fitness\Fitness_Planner_AI_Presentation.pptx"
+$pptPath = "C:\Users\adity\Downloads\Fitness_Planner_AI_Capstone_Presentation.pptx"
 $pdfPath = "C:\Users\adity\OneDrive\Documents\Desktop\fitness\Fitness_Planner_AI_Presentation.pdf"
 $ppt = $pptApp.Presentations.Open($pptPath)
 $ppt.SaveAs($pdfPath, 32)

@@ -59,7 +59,11 @@ const API = {
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 401 && !this._handlingAuthError) {
+        // Only treat 401 as a session expiry for protected endpoints,
+        // NOT for auth endpoints like login/register where 401 means
+        // "wrong credentials" — redirecting would cause a loop.
+        const isAuthEndpoint = endpoint.startsWith('/auth/login') || endpoint.startsWith('/auth/register');
+        if (response.status === 401 && !this._handlingAuthError && !isAuthEndpoint) {
           this._handlingAuthError = true;
           this.removeToken();
           this.removeUser();

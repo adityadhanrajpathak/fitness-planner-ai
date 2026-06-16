@@ -3,95 +3,108 @@ const pptxgen = require("pptxgenjs");
 let pptx = new pptxgen();
 
 // ─── Theme Colors ─────────────────────────────────────────────
-const PRIMARY   = "1A73E8";   // blue
-const ACCENT    = "34D399";   // green
-const DARK_BG   = "0F172A";   // dark navy
-const LIGHT_BG  = "F0F9FF";   // light blue-white
-const WHITE     = "FFFFFF";
-const DARK_TEXT = "1E293B";
-const GRAY      = "64748B";
+const PRIMARY       = "0E76A8";   // Darker blue
+const ACCENT        = "00A2E8";   // Bright blue / Cyan
+const SLATE_GRAY    = "4F5B66";   // Dark slate gray for first bar
+const LIGHT_GRAY    = "A0A0A0";   // Light gray for third bar
+const DARK_BG       = "3A4F59";   // Presenter box background
+const WHITE         = "FFFFFF";
+const DARK_TEXT     = "1E293B";
+const GRAY          = "64748B";
 
 // ─── Helpers ─────────────────────────────────────────────────
+function addTopBars(slide) {
+  // Three top bars: Slate Gray, Bright Blue/Cyan, Light Gray
+  slide.addShape(pptx.ShapeType.rect, { x: 0.4, y: 0.2, w: 3.0, h: 0.08, fill: { color: SLATE_GRAY } });
+  slide.addShape(pptx.ShapeType.rect, { x: 3.5, y: 0.2, w: 3.0, h: 0.08, fill: { color: ACCENT } });
+  slide.addShape(pptx.ShapeType.rect, { x: 6.6, y: 0.2, w: 3.0, h: 0.08, fill: { color: LIGHT_GRAY } });
+}
+
+function addEdunetLogo(slide) {
+  // Bottom-right Edunet Foundation branding text
+  slide.addText([
+    { text: "edu", options: { color: "0B3B60", bold: true, fontSize: 16 } },
+    { text: "net", options: { color: "D9534F", bold: true, fontSize: 16 } },
+    { text: "\nfoundation", options: { color: "777777", fontSize: 9 } }
+  ], { x: 8.2, y: 5.0, w: 1.5, h: 0.5, align: "right", fontFace: "Calibri" });
+}
+
 function addSlideHeader(slide, title) {
-  // Top accent bar
-  slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 0.12, fill: { color: ACCENT } });
+  // Add the top bars
+  addTopBars(slide);
+  
   // Title
   slide.addText(title, {
-    x: 0.4, y: 0.2, w: "90%", h: 0.7,
-    fontSize: 26, bold: true, color: PRIMARY, fontFace: "Calibri"
+    x: 0.4, y: 0.4, w: "90%", h: 0.5,
+    fontSize: 22, bold: true, color: PRIMARY, fontFace: "Calibri"
   });
-  // Divider line
-  slide.addShape(pptx.ShapeType.line, {
-    x: 0.4, y: 0.85, w: 9, h: 0,
-    line: { color: ACCENT, width: 1.5 }
-  });
+  
+  // Edunet Logo
+  addEdunetLogo(slide);
 }
 
 function addBullets(slide, items, yStart) {
   items.forEach((item, i) => {
-    // Bullet circle
-    slide.addShape(pptx.ShapeType.ellipse, {
-      x: 0.4, y: yStart + i * 0.65 + 0.08, w: 0.18, h: 0.18,
-      fill: { color: ACCENT }
-    });
-    slide.addText(item, {
-      x: 0.72, y: yStart + i * 0.65, w: 8.7, h: 0.6,
-      fontSize: 15, color: DARK_TEXT, fontFace: "Calibri", valign: "middle"
+    // Bullet point text
+    slide.addText("•  " + item, {
+      x: 0.5, y: yStart + i * 0.52, w: 9.0, h: 0.48,
+      fontSize: 14, color: DARK_TEXT, fontFace: "Calibri", valign: "top"
     });
   });
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 1 — TITLE
+// SLIDE 1 — CAPSTONE PROJECT / TITLE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s1 = pptx.addSlide();
-// Full dark background
-s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: "100%", fill: { color: DARK_BG } });
-// Green accent top bar
-s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 0.18, fill: { color: ACCENT } });
-// Blue left bar
-s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.18, h: "100%", fill: { color: PRIMARY } });
+s1.background = { color: WHITE };
+
+addTopBars(s1);
 
 s1.addText("CAPSTONE PROJECT", {
-  x: 0.5, y: 0.9, w: "90%", h: 0.6,
-  fontSize: 20, bold: false, color: ACCENT, align: "center", fontFace: "Calibri"
+  x: 0.5, y: 0.8, w: "90%", h: 0.5,
+  fontSize: 28, bold: true, color: PRIMARY, align: "center", fontFace: "Calibri"
 });
-s1.addText("Fitness Planner AI", {
-  x: 0.5, y: 1.6, w: "90%", h: 1.0,
-  fontSize: 44, bold: true, color: WHITE, align: "center", fontFace: "Calibri"
+
+s1.addText("FITNESS PLANNER AI", {
+  x: 0.5, y: 1.4, w: "90%", h: 0.6,
+  fontSize: 36, bold: true, color: ACCENT, align: "center", fontFace: "Calibri"
 });
-s1.addText("Personalized Workout & Diet Planner", {
-  x: 0.5, y: 2.65, w: "90%", h: 0.5,
-  fontSize: 18, color: "94A3B8", align: "center", italic: true, fontFace: "Calibri"
-});
-// Info box
+
+// Presenter Box
 s1.addShape(pptx.ShapeType.rect, {
-  x: 2.3, y: 3.4, w: 5.4, h: 1.8,
-  fill: { color: "1E293B" }, line: { color: ACCENT, width: 1 }
+  x: 0.5, y: 2.3, w: 9.0, h: 2.5,
+  fill: { color: DARK_BG }
 });
-s1.addText(
-  "Presented By:\n\nName   :  Aditya Dhanraj\nDept    :  CSE\nLive App:  fitness-seven-sand.vercel.app",
-  {
-    x: 2.5, y: 3.5, w: 5.0, h: 1.65,
-    fontSize: 14, color: WHITE, fontFace: "Calibri", valign: "middle"
-  }
-);
+
+s1.addText("Presented By:", {
+  x: 0.8, y: 2.5, w: 8.4, h: 0.4,
+  fontSize: 16, bold: true, color: ACCENT, fontFace: "Calibri"
+});
+
+s1.addText("1.  Student Name- Aditya Dhanraj\n2.  College Name- Gandhi Engineering College\n3.  Department- CSE", {
+  x: 0.8, y: 2.9, w: 8.4, h: 1.5,
+  fontSize: 15, bold: true, color: ACCENT, fontFace: "Calibri", lineSpacing: 24
+});
+
+addEdunetLogo(s1);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SLIDE 2 — OUTLINE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s2 = pptx.addSlide();
-s2.background = { color: LIGHT_BG };
-addSlideHeader(s2, "Outline");
+s2.background = { color: WHITE };
+addSlideHeader(s2, "OUTLINE");
 
 const outlineItems = [
-  "1.  Problem Statement",
-  "2.  Proposed Solution",
-  "3.  System Architecture & Tech Stack",
-  "4.  Algorithm & Deployment",
-  "5.  Key Features & Results",
-  "6.  Conclusion & Future Scope",
-  "7.  References"
+  "Problem Statement",
+  "Proposed Solution",
+  "System Approach",
+  "Algorithm & Deployment",
+  "Result",
+  "Conclusion",
+  "Future Scope",
+  "References"
 ];
 addBullets(s2, outlineItems, 1.1);
 
@@ -100,13 +113,13 @@ addBullets(s2, outlineItems, 1.1);
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s3 = pptx.addSlide();
 s3.background = { color: WHITE };
-addSlideHeader(s3, "Problem Statement");
+addSlideHeader(s3, "PROBLEM STATEMENT");
 
 const problemItems = [
-  "Generic Solutions: Fitness apps offer one-size-fits-all plans ignoring individual body metrics and dietary needs.",
-  "Cost Barriers: Personal fitness coaching and specialized dietitians are expensive and inaccessible.",
-  "Data Privacy: Health apps relying on cloud AI APIs expose sensitive body metrics to third-party servers.",
-  "Cultural Blindspot: Most plans ignore cultural food preferences, making them hard to follow in the long run."
+  "Generic Solutions: Modern fitness applications offer generic, one-size-fits-all workout and diet plans that completely ignore individual body metrics, fitness levels, and cultural restrictions.",
+  "High Cost Barriers: Custom workout plans, personal trainers, and certified nutritionists are expensive and financially inaccessible to the average user.",
+  "Data Privacy Concerns: Popular fitness apps require users to upload highly sensitive body metrics and personal details to external cloud servers, risking user data privacy.",
+  "Lack of Cultural Adaptation: Existing diet generator systems fail to take into account cultural food preferences (e.g., North Indian, South Indian, Jain, Vegan), leading to unsustainable dietary changes."
 ];
 addBullets(s3, problemItems, 1.1);
 
@@ -114,177 +127,172 @@ addBullets(s3, problemItems, 1.1);
 // SLIDE 4 — PROPOSED SOLUTION
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s4 = pptx.addSlide();
-s4.background = { color: LIGHT_BG };
-addSlideHeader(s4, "Proposed Solution");
+s4.background = { color: WHITE };
+addSlideHeader(s4, "PROPOSED SOLUTION");
 
 const solutionItems = [
-  "AI-Powered Personalization: Generates custom workout + meal plans from user body metrics (age, weight, height, activity level).",
-  "100% Local Processing: Built-in AI engine on the backend — no external API calls, full data privacy guaranteed.",
-  "Scientific Accuracy: Uses the Mifflin-St Jeor BMR equation with TDEE multipliers for precise calorie calculation.",
-  "Cultural Meal Plans: Supports North Indian, South Indian, Jain, Vegan and Mixed food preferences.",
-  "Free & Accessible: Fully deployed web app at fitness-seven-sand.vercel.app — free for everyone."
+  "AI-Powered Personalization: Automatically computes personalized fitness metrics including BMR, TDEE, BMI, and customized caloric targets in real-time.",
+  "100% Local Processing: Runs a built-in AI rules engine entirely on the local backend server without relying on expensive or privacy-violating external APIs.",
+  "Science-Backed Planning: Implements the Mifflin-St Jeor equation and standard exercise physiology ratios to generate customized 7-day workout schedules.",
+  "Cultural Nutrition Customization: Curates personalized daily meal plans across 5 distinct food profiles: North Indian, South Indian, Jain, Vegan, and Mixed diets.",
+  "Completely Free & Open Source: Deployed online for public access, breaking the cost barrier of personal fitness coaching."
 ];
 addBullets(s4, solutionItems, 1.1);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 5 — SYSTEM ARCHITECTURE
+// SLIDE 5 — SYSTEM APPROACH
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s5 = pptx.addSlide();
 s5.background = { color: WHITE };
-addSlideHeader(s5, "System Architecture & Tech Stack");
+addSlideHeader(s5, "SYSTEM APPROACH");
 
-// Two column layout
-const techCols = [
-  { label: "Frontend", items: ["HTML5 + CSS3 (Vanilla)", "Modular JavaScript (SPA)", "Responsive Design", "Dark Theme UI"] },
-  { label: "Backend", items: ["Node.js + Express.js", "JWT Authentication", "bcryptjs Password Hashing", "@libsql/client (Turso DB)"] }
+// 2-column layout for Frontend & Backend Tech stack
+s5.addText("Frontend Tech Stack", { x: 0.5, y: 1.0, w: 4.2, h: 0.4, fontSize: 16, bold: true, color: PRIMARY, fontFace: "Calibri" });
+const frontendTech = [
+  "HTML5 & CSS3: Custom dark-themed responsive user interface optimized for mobile and desktop viewports.",
+  "Vanilla JavaScript: Modular client-side router (SPA), state management, and direct REST API integrations.",
+  "Dynamic Charts & Stats: Live visualization of BMI, BMR, daily calories, and water intake goals."
 ];
-techCols.forEach((col, ci) => {
-  const xBase = ci === 0 ? 0.4 : 5.2;
-  s5.addShape(pptx.ShapeType.rect, { x: xBase, y: 1.05, w: 4.4, h: 0.45, fill: { color: PRIMARY } });
-  s5.addText(col.label, { x: xBase, y: 1.05, w: 4.4, h: 0.45, fontSize: 15, bold: true, color: WHITE, align: "center", fontFace: "Calibri" });
-  col.items.forEach((item, i) => {
-    s5.addShape(pptx.ShapeType.rect, {
-      x: xBase, y: 1.55 + i * 0.65, w: 4.4, h: 0.6,
-      fill: { color: i % 2 === 0 ? LIGHT_BG : WHITE }, line: { color: "CBD5E1", width: 0.5 }
-    });
-    s5.addText(item, { x: xBase + 0.1, y: 1.55 + i * 0.65, w: 4.2, h: 0.6, fontSize: 13, color: DARK_TEXT, valign: "middle", fontFace: "Calibri" });
-  });
-});
+addBullets(s5, frontendTech, 1.4);
 
-// Deployment info
-s5.addText("🚀  Deployed on Vercel  |  GitHub: adityadhanrajpathak/fitness-planner-ai", {
-  x: 0.4, y: 4.6, w: "90%", h: 0.4,
-  fontSize: 12, color: GRAY, italic: true, fontFace: "Calibri"
-});
+s5.addText("Backend & Database Stack", { x: 0.5, y: 3.1, w: 4.2, h: 0.4, fontSize: 16, bold: true, color: PRIMARY, fontFace: "Calibri" });
+const backendTech = [
+  "Node.js & Express: Lightweight RESTful API server for session, profile, workout, and diet endpoints.",
+  "Better-SQLite3 / LibSQL: Embedded relational database for storing encrypted profiles and local datasets.",
+  "JWT & bcryptjs: Token-based authentication and secure password hashing with role-based access controls."
+];
+addBullets(s5, backendTech, 3.5);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 6 — ALGORITHM
+// SLIDE 6 — ALGORITHM & DEPLOYMENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s6 = pptx.addSlide();
-s6.background = { color: LIGHT_BG };
-addSlideHeader(s6, "Algorithm & Core Engine");
+s6.background = { color: WHITE };
+addSlideHeader(s6, "ALGORITHM & DEPLOYMENT");
 
 const algoItems = [
-  "Step 1 – BMR Calculation: Mifflin-St Jeor Equation → BMR = (10×W) + (6.25×H) – (5×A) ± 5",
-  "Step 2 – TDEE Calculation: BMR × Activity Multiplier (Sedentary 1.2 → Very Active 1.9)",
-  "Step 3 – Goal Adjustment: Weight Loss (−500 cal), Maintenance (±0), Muscle Gain (+300 cal)",
-  "Step 4 – Macro Split: Protein 1.6g/kg body weight, Carbs 50%, Fat 25% of remaining calories",
-  "Step 5 – Plan Generation: Algorithmic matching of exercises & meals from internal curated database"
+  "BMR Calculation: Evaluates Basal Metabolic Rate using Mifflin-St Jeor: BMR = (10 × W) + (6.25 × H) - (5 × A) + s (where s is +5 for men, -161 for women).",
+  "TDEE Calculation: TDEE = BMR × Activity Multiplier (from Sedentary 1.2 up to Extremely Active 1.9).",
+  "Caloric Adjustments: Adjusts calories for user goals: Muscle Gain (+300 to +500 kcal) or Fat Loss (-500 to -750 kcal).",
+  "Macro split: Minimum protein threshold set at 1.6g/kg of body weight, with balanced carbs (50%) and fats (25%).",
+  "Deployment: Automated CI/CD pipeline deploying the front-end and server environment to Vercel."
 ];
 addBullets(s6, algoItems, 1.1);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 7 — KEY FEATURES
+// SLIDE 7 — RESULT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s7 = pptx.addSlide();
 s7.background = { color: WHITE };
-addSlideHeader(s7, "Key Features");
-
-const features = [
-  { icon: "📊", title: "Live Dashboard", desc: "BMI, BMR, daily calories & water intake at a glance" },
-  { icon: "💪", title: "Workout Plans", desc: "Day-by-day exercise routines matched to equipment & goals" },
-  { icon: "🥗", title: "Diet Plans", desc: "3-meal daily plans with calories, protein & cultural preferences" },
-  { icon: "📈", title: "Progress Tracking", desc: "Log weight, meals & workout completion daily" },
-  { icon: "🔐", title: "Secure Auth", desc: "JWT tokens + bcrypt password hashing, role-based access" },
-  { icon: "👑", title: "Admin Panel", desc: "Platform statistics and user management dashboard" }
-];
-features.forEach((f, i) => {
-  const col = i % 3;
-  const row = Math.floor(i / 3);
-  const xBase = 0.3 + col * 3.3;
-  const yBase = 1.1 + row * 1.8;
-  s7.addShape(pptx.ShapeType.rect, { x: xBase, y: yBase, w: 3.1, h: 1.6, fill: { color: LIGHT_BG }, line: { color: ACCENT, width: 1 } });
-  s7.addText(f.icon + " " + f.title, { x: xBase + 0.1, y: yBase + 0.1, w: 2.9, h: 0.45, fontSize: 14, bold: true, color: PRIMARY, fontFace: "Calibri" });
-  s7.addText(f.desc, { x: xBase + 0.1, y: yBase + 0.55, w: 2.9, h: 0.95, fontSize: 12, color: DARK_TEXT, fontFace: "Calibri", valign: "top" });
-});
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 8 — RESULTS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let s8 = pptx.addSlide();
-s8.background = { color: LIGHT_BG };
-addSlideHeader(s8, "Results");
+addSlideHeader(s7, "RESULT");
 
 const resultItems = [
-  "Functional full-stack web application live at: fitness-seven-sand.vercel.app",
-  "Successfully generates personalized workout plans (7-day weekly schedule) in under 1 second.",
-  "Diet plans meet user's exact caloric targets with proper macro distribution per meal.",
-  "Secure registration, login, and profile management fully operational.",
-  "Admin panel provides platform-wide statistics and user management.",
-  "Google Search Console verified — site indexed for public discovery."
+  "Fully functional, responsive web application launched and publicly accessible.",
+  "Instantly generates custom 7-day workout plans tailored to fitness goals, target muscle groups, and available equipment.",
+  "Accurately generates customized daily meal plans that adhere strictly to target caloric budgets and macro ranges.",
+  "Secure user authentication (JWT) with password recovery, profile editing, and progress persistence.",
+  "Interactive dashboard displays progress metrics, daily checklist, and live health stats.",
+  "Fully operational Admin panel showing server statistics, registered user metrics, and account types."
 ];
-addBullets(s8, resultItems, 1.1);
+addBullets(s7, resultItems, 1.1);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 9 — CONCLUSION
+// SLIDE 8 — CONCLUSION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let s8 = pptx.addSlide();
+s8.background = { color: WHITE };
+addSlideHeader(s8, "CONCLUSION");
+
+const conclusionItems = [
+  "Successfully developed a local, privacy-first alternative to commercial fitness apps.",
+  "Proved that high-quality, scientifically sound personalization can be achieved using a rule-based AI engine on server-side without calling external LLM APIs.",
+  "Eliminated the high financial barriers of health and fitness planning by providing a free, accessible platform.",
+  "Enhanced usability and long-term compliance by directly integrating cultural food profiles into the nutrition planning algorithm."
+];
+addBullets(s8, conclusionItems, 1.1);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SLIDE 9 — FUTURE SCOPE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s9 = pptx.addSlide();
 s9.background = { color: WHITE };
-addSlideHeader(s9, "Conclusion");
-
-const conclusionItems = [
-  "Fitness Planner AI successfully bridges the gap between generic fitness apps and expensive personal coaching.",
-  "By leveraging server-side algorithmic generation, it provides scientifically sound, personalized health recommendations.",
-  "Proves that effective, highly personalized health planning can be achieved without external AI APIs.",
-  "The app is accessible to anyone for free, breaking the cost barrier of fitness coaching."
-];
-addBullets(s9, conclusionItems, 1.1);
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 10 — FUTURE SCOPE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let s10 = pptx.addSlide();
-s10.background = { color: LIGHT_BG };
-addSlideHeader(s10, "Future Scope");
+addSlideHeader(s9, "FUTURE SCOPE");
 
 const futureItems = [
-  "📱  Mobile App: Convert to native iOS and Android applications.",
-  "⌚  Wearable Integration: Sync with smartwatches for real-time calorie and step tracking.",
-  "🤖  LLM Integration: Use open-source language models for natural language fitness advice.",
-  "📊  Visual Analytics: Add graphs to visualize weight trends, strength progress over time.",
-  "🌍  Expanded Database: More cultural food datasets (South Asian, Middle Eastern, East Asian)."
+  "Mobile Application: Port the responsive SPA to a cross-platform mobile application (React Native / Flutter).",
+  "Wearable Integrations: Connect with Apple HealthKit, Google Fit, and smartwatches for automatic step and calorie tracking.",
+  "Natural Language AI: Integrate a lightweight, open-source local LLM (e.g., Llama 3) for conversational fitness coaching.",
+  "Social Features: Allow users to share progress, form workout challenges, and build fitness communities.",
+  "Expanded Databases: Incorporate broader food databases with global cultural preferences and local grocery pricing."
 ];
-addBullets(s10, futureItems, 1.1);
+addBullets(s9, futureItems, 1.1);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SLIDE 11 — REFERENCES
+// SLIDE 10 — REFERENCES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let s10 = pptx.addSlide();
+s10.background = { color: WHITE };
+addSlideHeader(s10, "REFERENCES");
+
+const refItems = [
+  "Mifflin, M. D., et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. The American Journal of Clinical Nutrition.",
+  "Node.js Runtime Documentation. OpenJS Foundation. URL: https://nodejs.org/",
+  "Express.js Web Application Framework. URL: https://expressjs.com/",
+  "JSON Web Token (JWT) Specifications (RFC 7519). URL: https://jwt.io/",
+  "pptxgenjs Presentation Generation Library. URL: https://gitbrent.github.io/PptxGenJS/",
+  "SQLite Database Engine. URL: https://www.sqlite.org/"
+];
+addBullets(s10, refItems, 1.1);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SLIDE 11 — APPLICATION LINK
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s11 = pptx.addSlide();
 s11.background = { color: WHITE };
-addSlideHeader(s11, "References");
+addSlideHeader(s11, "APPLICATION LINK");
 
-const refItems = [
-  "Mifflin, M. D., et al. (1990). A new predictive equation for resting energy expenditure. The American Journal of Clinical Nutrition.",
-  "Node.js Foundation. Node.js Documentation. https://nodejs.org/",
-  "OpenJS Foundation. Express.js Framework. https://expressjs.com/",
-  "JSON Web Tokens Standard. https://jwt.io/",
-  "Vercel Inc. Vercel Deployment Platform. https://vercel.com/",
-  "pptxgenjs Library. https://gitbrent.github.io/PptxGenJS/"
-];
-addBullets(s11, refItems, 1.1);
+s11.addText("Live Deployed Application:", {
+  x: 0.5, y: 1.5, w: 9.0, h: 0.5,
+  fontSize: 18, bold: true, color: PRIMARY, fontFace: "Calibri"
+});
+
+s11.addText("🌐  https://fitness-seven-sand.vercel.app", {
+  x: 0.5, y: 2.1, w: 9.0, h: 0.6,
+  fontSize: 22, bold: true, color: ACCENT, fontFace: "Calibri"
+});
+
+s11.addText("Source Code Repository:", {
+  x: 0.5, y: 3.1, w: 9.0, h: 0.5,
+  fontSize: 18, bold: true, color: PRIMARY, fontFace: "Calibri"
+});
+
+s11.addText("📦  https://github.com/adityadhanrajpathak/fitness-planner-ai", {
+  x: 0.5, y: 3.7, w: 9.0, h: 0.6,
+  fontSize: 22, bold: true, color: ACCENT, fontFace: "Calibri"
+});
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SLIDE 12 — THANK YOU
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 let s12 = pptx.addSlide();
-s12.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: "100%", fill: { color: DARK_BG } });
-s12.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 0.18, fill: { color: ACCENT } });
-s12.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.18, h: "100%", fill: { color: PRIMARY } });
+s12.background = { color: WHITE };
 
-s12.addText("Thank You!", {
-  x: 0.5, y: 1.4, w: "90%", h: 1.2,
-  fontSize: 54, bold: true, color: WHITE, align: "center", fontFace: "Calibri"
+// Top bars and logo
+addTopBars(s12);
+addEdunetLogo(s12);
+
+s12.addText("THANK YOU", {
+  x: 0.5, y: 2.0, w: "90%", h: 1.5,
+  fontSize: 54, bold: true, color: PRIMARY, align: "center", fontFace: "Calibri"
 });
+
 s12.addText("Questions & Feedback Welcome", {
-  x: 0.5, y: 2.7, w: "90%", h: 0.5,
-  fontSize: 20, color: ACCENT, align: "center", italic: true, fontFace: "Calibri"
-});
-s12.addText("🌐  https://fitness-seven-sand.vercel.app\n📦  github.com/adityadhanrajpathak/fitness-planner-ai", {
-  x: 1.5, y: 3.5, w: "70%", h: 0.9,
-  fontSize: 14, color: "94A3B8", align: "center", fontFace: "Calibri"
+  x: 0.5, y: 3.3, w: "90%", h: 0.5,
+  fontSize: 20, color: SLATE_GRAY, align: "center", italic: true, fontFace: "Calibri"
 });
 
 // ─── Write File ───────────────────────────────────────────────
 pptx.writeFile({ fileName: "Fitness_Planner_AI_Presentation.pptx" }).then(fileName => {
   console.log(`✅  Created: ${fileName}`);
 });
+

@@ -223,14 +223,19 @@ const Auth = {
 
     if (!email || !password) return;
 
+    // Clear previous inline errors
+    const pwdError = document.getElementById('login-password-error');
+    if (pwdError) pwdError.classList.remove('show');
+
     this.setLoading(btn, true);
     try {
       await API.login(email, password);
       App.showToast('Login successful! Welcome back.', 'success');
       App.checkAuthState();
     } catch (err) {
+      // Remove any existing error toasts to prevent stacking
+      document.querySelectorAll('#toast-container .toast.error').forEach(t => t.remove());
       App.showToast(err.message, 'error');
-      const pwdError = document.getElementById('login-password-error');
       if (pwdError) {
         pwdError.innerText = err.message;
         pwdError.classList.add('show');

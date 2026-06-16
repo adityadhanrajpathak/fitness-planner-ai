@@ -199,7 +199,7 @@ const Profile = {
               <div class="form-group">
                 <label class="form-label">Dietary Restrictions</label>
                 <div class="checkbox-cards">
-                  ${['vegetarian', 'vegan', 'gluten-free', 'lactose-free', 'halal'].map(restriction => {
+                  ${['vegetarian', 'vegan', 'gluten-free', 'lactose-free'].map(restriction => {
                     const isChecked = this.formData.dietary_restrictions.includes(restriction);
                     return `
                       <div class="checkbox-card ${isChecked ? 'checked' : ''}" data-restriction="${restriction}">
